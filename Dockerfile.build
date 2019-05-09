@@ -1,5 +1,7 @@
 FROM golang:alpine AS builder
 
+ENV GO111MODULE=auto
+
 RUN buildDeps=' \
                 make \
                 git \
@@ -23,7 +25,7 @@ LABEL vendor "jrasell"
 
 WORKDIR /usr/bin/
 
-COPY --from=builder /go/src/github.com/jrasell/sherpa/cmd/sherpa /usr/bin/sherpa
+COPY --from=builder /go/src/github.com/jrasell/sherpa/sherpa /usr/bin/sherpa
 
 RUN \
         apk --no-cache add \
