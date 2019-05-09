@@ -51,6 +51,6 @@ func GetVersion() string {
 	if Version != "" {
 		version = fmt.Sprintf("v%s", Version)
 	}
-	return fmt.Sprintf("%s\n\tDate: %s\n\tCommit: %s\n\tBranch: %s\n\tState: %s",
+	return fmt.Sprintf("%s\n\tDate:   %s\n\tCommit: %s\n\tBranch: %s\n\tState:  %s",
 		version, GitDate, gitCommit, GitBranch, GitState)
 }
