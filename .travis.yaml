@@ -1,0 +1,12 @@
+sudo: false
+dist: trusty
+language: go
+go:
+  - "1.12"
+script:
+  - make tools
+  - make
+after_success:
+  - if [[ -n "$TRAVIS_TAG" ]]; then make release; fi
+notifications:
+  email: true
