@@ -8,7 +8,7 @@ import (
 
 const (
 	configKeyHTTPServerBindAddr              = "bind-addr"
-	configKeyHTTPServerBindAddrDefault       = "localhost"
+	configKeyHTTPServerBindAddrDefault       = "127.0.0.1"
 	configKeyHTTPServerPort                  = "bind-port"
 	configKeyHTTPServerPortDefault           = 8000
 	configKeyConsulStorageBackendPathDefault = "sherpa/policies/"

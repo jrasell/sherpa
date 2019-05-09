@@ -28,7 +28,7 @@ func RegisterConfig(cmd *cobra.Command) {
 			key          = configKeyAutoscalingEvaluationInterval
 			longOpt      = "autoscaling-evaluation-interval"
 			defaultValue = configKeyAutoscalingEvaluationIntervalDefault
-			description  = ""
+			description  = "The time in seconds between each run on the internal autoscaler"
 		)
 
 		flags.Int(longOpt, defaultValue, description)
