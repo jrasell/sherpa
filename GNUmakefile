@@ -7,7 +7,7 @@ tools: ## Install the tools used to test and build
 
 build: ## Build Sherpa for development purposes
 	@echo "==> Running $@..."
-	govvv build -o sherpa . -version local
+	govvv build -o sherpa ./cmd -version local
 
 test: ## Run the Sherpa test suite with coverage
 	@echo "==> Running $@..."
