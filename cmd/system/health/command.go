@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jrasell/sherpa/pkg/api"
+	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -24,9 +25,10 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 }
 
 func runHealth(_ *cobra.Command, _ []string) {
-	clientCfg := api.DefaultConfig()
+	clientConfig := clientCfg.GetConfig()
+	mergedConfig := api.DefaultConfig(&clientConfig)
 
-	client, err := api.NewClient(clientCfg)
+	client, err := api.NewClient(mergedConfig)
 	if err != nil {
 		fmt.Println("Error setting up Sherpa client:", err)
 		os.Exit(sysexits.Software)

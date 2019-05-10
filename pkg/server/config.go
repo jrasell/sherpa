@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	Server    *serverCfg.Config
+	TLS       *serverCfg.TLSConfig
 	AutoScale *autoscalecfg.Config
 }
 

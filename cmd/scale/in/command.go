@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jrasell/sherpa/pkg/api"
+	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
 	scaleCfg "github.com/jrasell/sherpa/pkg/config/scale"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
@@ -33,10 +34,12 @@ func runIn(_ *cobra.Command, args []string) {
 		os.Exit(sysexits.Usage)
 	}
 
-	clientCfg := api.DefaultConfig()
 	scaleConfig := scaleCfg.GetScaleConfig()
 
-	client, err := api.NewClient(clientCfg)
+	clientConfig := clientCfg.GetConfig()
+	mergedConfig := api.DefaultConfig(&clientConfig)
+
+	client, err := api.NewClient(mergedConfig)
 	if err != nil {
 		fmt.Println("Error setting up Sherpa client:", err)
 		os.Exit(sysexits.Software)

@@ -25,6 +25,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 	}
 
 	serverCfg.RegisterConfig(cmd)
+	serverCfg.RegisterTLSConfig(cmd)
 	autoscaleCfg.RegisterConfig(cmd)
 	logCfg.RegisterConfig(cmd)
 	rootCmd.AddCommand(cmd)
@@ -34,6 +35,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 
 func runServer(_ *cobra.Command, _ []string) {
 	serverConfig := serverCfg.GetConfig()
+	tlsConfig := serverCfg.GetTLSConfig()
 	autoscaleConfig := autoscaleCfg.GetConfig()
 
 	if err := verifyServerConfig(serverConfig); err != nil {
@@ -48,8 +50,11 @@ func runServer(_ *cobra.Command, _ []string) {
 		os.Exit(sysexits.Software)
 	}
 
-	cfg := &server.Config{Server: &serverConfig, AutoScale: &autoscaleConfig}
-
+	cfg := &server.Config{
+		AutoScale: &autoscaleConfig,
+		Server:    &serverConfig,
+		TLS:       &tlsConfig,
+	}
 	srv := server.New(log.Logger, cfg)
 
 	if err := srv.Start(); err != nil {

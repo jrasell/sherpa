@@ -9,8 +9,8 @@ import (
 	"github.com/jrasell/sherpa/cmd/server"
 	"github.com/jrasell/sherpa/cmd/system"
 	"github.com/jrasell/sherpa/pkg/build"
+	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
 	envCfg "github.com/jrasell/sherpa/pkg/config/env"
-	sherpaCfg "github.com/jrasell/sherpa/pkg/config/sherpa"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +28,7 @@ running in a number of different modes to suit your needs.
 		Version: build.GetVersion(),
 	}
 	envCfg.RegisterCobra(rootCmd)
-	sherpaCfg.RegisterConfig(rootCmd)
+	clientCfg.RegisterConfig(rootCmd)
 
 	if err := registerCommands(rootCmd); err != nil {
 		fmt.Println("error registering commands:", err)

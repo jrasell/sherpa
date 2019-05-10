@@ -2,76 +2,110 @@ package api
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
+	"github.com/hashicorp/go-rootcerts"
+	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
 )
 
 type Config struct {
 	Address    string
+	TLSConfig  *TLSConfig
 	httpClient *http.Client
 }
 
-// QueryOptions are used to create a query which includes query params. This is used for GET, POST
-// and PUT calls.
-type QueryOptions struct {
-
-	// Params are HTTP parameters on the query URL.
-	Params map[string]string
+type TLSConfig struct {
+	CACert        string
+	ClientCert    string
+	ClientCertKey string
 }
 
 type Client struct {
 	config Config
 }
 
-type request struct {
-	config *Config
-	method string
-	url    *url.URL
-	params url.Values
-	body   io.Reader
-	obj    interface{}
-}
-
-// setQueryOptions is used to annotate the request with additional query options.
-func (r *request) setQueryOptions(q *QueryOptions) {
-	if q == nil {
-		return
-	}
-	for k, v := range q.Params {
-		r.params.Set(k, v)
-	}
-}
-
-func DefaultConfig() *Config {
-	return &Config{
+func DefaultConfig(cfg *clientCfg.Config) *Config {
+	config := Config{
 		Address:    "http://127.0.0.1:8000",
+		TLSConfig:  &TLSConfig{},
 		httpClient: cleanhttp.DefaultClient(),
 	}
+	transport := config.httpClient.Transport.(*http.Transport)
+	transport.TLSHandshakeTimeout = 10 * time.Second
+	transport.TLSClientConfig = &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	if cfg.Addr != "" {
+		config.Address = cfg.Addr
+	}
+	if cfg.CAPath != "" {
+		config.TLSConfig.CACert = cfg.CAPath
+	}
+	if cfg.CertPath != "" {
+		config.TLSConfig.ClientCert = cfg.CertPath
+	}
+	if cfg.CertKeyPath != "" {
+		config.TLSConfig.ClientCertKey = cfg.CertKeyPath
+	}
+	return &config
 }
 
 func NewClient(config *Config) (*Client, error) {
-
-	defConfig := DefaultConfig()
-
-	if config.Address == "" {
-		config.Address = defConfig.Address
-	} else if _, err := url.Parse(config.Address); err != nil {
+	if _, err := url.Parse(config.Address); err != nil {
 		return nil, fmt.Errorf("invalid address '%s': %v", config.Address, err)
 	}
 
-	if config.httpClient == nil {
-		config.httpClient = defConfig.httpClient
+	// Configure the TLS configurations
+	if err := config.ConfigureTLS(); err != nil {
+		return nil, err
 	}
 
 	return &Client{
 		config: *config,
 	}, nil
+}
+
+func (c *Config) ConfigureTLS() error {
+	if c.TLSConfig == nil {
+		return nil
+	}
+
+	var clientCert tls.Certificate
+
+	foundClientCert := false
+	if c.TLSConfig.ClientCert != "" || c.TLSConfig.ClientCertKey != "" {
+		if c.TLSConfig.ClientCert != "" && c.TLSConfig.ClientCertKey != "" {
+			var err error
+			clientCert, err = tls.LoadX509KeyPair(c.TLSConfig.ClientCert, c.TLSConfig.ClientCertKey)
+			if err != nil {
+				return err
+			}
+			foundClientCert = true
+		} else {
+			return fmt.Errorf("client cert and client key must be provided")
+		}
+	}
+
+	clientTLSConfig := c.httpClient.Transport.(*http.Transport).TLSClientConfig
+	rootConfig := &rootcerts.Config{CAPath: c.TLSConfig.CACert}
+
+	if err := rootcerts.ConfigureTLS(clientTLSConfig, rootConfig); err != nil {
+		return err
+	}
+
+	if foundClientCert {
+		clientTLSConfig.Certificates = []tls.Certificate{clientCert}
+	}
+	return nil
 }
 
 func (c *Client) get(endpoint string, out interface{}) error {
@@ -186,31 +220,6 @@ func (c *Client) doRequest(r *request) (*http.Response, error) {
 		return nil, err
 	}
 	return c.config.httpClient.Do(req)
-}
-
-func (r *request) toHTTP() (*http.Request, error) {
-	// Encode the get parameters
-	r.url.RawQuery = r.params.Encode()
-
-	// Check if we should encode the body
-	if r.body == nil && r.obj != nil {
-		b, err := encodeBody(r.obj)
-		if err != nil {
-			return nil, err
-		}
-		r.body = b
-	}
-
-	// Create the HTTP request
-	req, err := http.NewRequest(r.method, r.url.RequestURI(), r.body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.URL.Host = r.url.Host
-	req.URL.Scheme = r.url.Scheme
-	req.Host = r.url.Host
-	return req, nil
 }
 
 func decodeBody(body *io.ReadCloser, out interface{}) error {

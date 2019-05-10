@@ -2,13 +2,15 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale"
@@ -44,13 +46,21 @@ func New(l zerolog.Logger, cfg *Config) *HTTPServer {
 
 func (h *HTTPServer) Start() error {
 	h.logger.Info().Str("addr", h.addr).Msg("starting HTTP server")
-	h.logger.Info().Object("config", h.cfg.Server).Msg("Sherpa server configuration")
+	h.logServerConfig()
+
 	if err := h.setup(); err != nil {
 		return err
 	}
 
 	h.handleSignals(context.Background())
 	return nil
+}
+
+func (h *HTTPServer) logServerConfig() {
+	h.logger.Info().
+		Object("server", h.cfg.Server).
+		Object("tls", h.cfg.TLS).
+		Msg("Sherpa server configuration")
 }
 
 func (h *HTTPServer) setup() error {
@@ -71,13 +81,38 @@ func (h *HTTPServer) setup() error {
 	r := router.WithRoutes(h.logger, *initialRoutes)
 	http.Handle("/", middlewareLogger(r, h.logger))
 
-	ln := h.listenWithRetry()
+	// Run the TLS setup process so that if the user has configured a TLS certificate pair the
+	// server uses these.
+	if err := h.setupTLS(); err != nil {
+		return err
+	}
+
+	// Once we have the TLS config in place, we can setup the listener which uses the TLS setup to
+	// correctly start the listener.
+	ln := h.setupListener()
+	if ln == nil {
+		return errors.New("failed to setup HTTP server, listener is nil")
+	}
+	h.logger.Info().Str("addr", h.addr).Msg("HTTP server successfully listening")
 
 	go func() {
 		err := h.Serve(ln)
 		h.logger.Info().Err(err).Msg("HTTP server has been shutdown")
 	}()
 
+	return nil
+}
+
+func (h *HTTPServer) setupTLS() error {
+	if h.cfg.TLS.CertPath != "" && h.cfg.TLS.CertKeyPath != "" {
+		h.logger.Debug().Msg("setting up server TLS")
+
+		cert, err := tls.LoadX509KeyPair(h.cfg.TLS.CertPath, h.cfg.TLS.CertKeyPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to load certificate cert/key pair")
+		}
+		h.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cert}}
+	}
 	return nil
 }
 
@@ -110,21 +145,22 @@ func (h *HTTPServer) setupAutoScaling() {
 	go h.autoScale.Run()
 }
 
-func (h *HTTPServer) listenWithRetry() net.Listener {
+func (h *HTTPServer) setupListener() net.Listener {
 	var (
 		err error
 		ln  net.Listener
 	)
 
-	for i := 0; i < 10; i++ {
+	if h.TLSConfig != nil {
+		ln, err = tls.Listen("tcp", h.addr, h.TLSConfig)
+	} else {
 		ln, err = net.Listen("tcp", h.addr)
-		if err == nil {
-			h.logger.Info().Str("addr", h.addr).Msg("HTTP server listening")
-			return ln
-		}
-		time.Sleep(time.Second)
 	}
-	return nil
+
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to setup server HTTP listener")
+	}
+	return ln
 }
 
 func (h *HTTPServer) Stop(ctx context.Context) error {
