@@ -16,6 +16,8 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 * `--log-format` (string: "auto") - Is the format at which to log to and can be "auto", "zerolog" or "human".
 * `--log-level` (string: "info") - The level at which Sherpa should log to. Valid log levels include WARN, INFO, or DEBUG in increasing order of verbosity.
 * `--log-use-color` (bool: true) - Specifies whether to use ANSI colour logging.
+* `--tls-cert-key-path` (string: "") - Path to the TLS certificate key for the Sherpa server.
+* `--tls-cert-path` (string: "") - Path to the TLS certificate for the Sherpa server.
 
 ### Environment Variables
 

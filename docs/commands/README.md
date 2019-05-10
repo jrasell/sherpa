@@ -20,6 +20,15 @@ There are a number of command and subcommand options available. Construct your V
 sherpa <command> <subcommand> [options] [args]
 ```
 
+## General Options
+
+The following options are available to all Sherpa CLI commands and help set client connection variables.
+
+* `--addr` (string: "http://127.0.0.1:8000") - The HTTP(S) address of the sherpa server
+* `--client-ca-path` (string: "") - Path to a PEM encoded CA cert file to use to verify the Sherpa server SSL certificate.
+* `--client-cert-key-path` (string: "") - Path to an unencrypted PEM encoded private key matching the client certificate
+* `--client-cert-path string` (string: "") - Path to a PEM encoded client certificate for TLS authentication to the Sherpa server
+
 ## Exit Codes
 
 The Sherpa CLI aims to be consistent and well-behaved using [sysexits](https://github.com/sean-/sysexits) for CLI exit codes.
