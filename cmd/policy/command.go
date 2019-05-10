@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jrasell/sherpa/cmd/policy/delete"
+	initcmd "github.com/jrasell/sherpa/cmd/policy/init"
 	"github.com/jrasell/sherpa/cmd/policy/list"
 	"github.com/jrasell/sherpa/cmd/policy/read"
 	"github.com/jrasell/sherpa/cmd/policy/write"
@@ -46,6 +47,10 @@ func registerCommands(cmd *cobra.Command) error {
 	}
 
 	if err := write.RegisterCommand(cmd); err != nil {
+		return err
+	}
+
+	if err := initcmd.RegisterCommand(cmd); err != nil {
 		return err
 	}
 
