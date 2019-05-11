@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/jrasell/sherpa.svg?branch=master)](https://travis-ci.org/jrasell/sherpa) [![Go Report Card](https://goreportcard.com/badge/github.com/jrasell/sherpa)](https://goreportcard.com/report/github.com/jrasell/sherpa) [![GoDoc](https://godoc.org/github.com/jrasell/sherpa?status.svg)](https://godoc.org/github.com/jrasell/sherpa)
 
-Sherpa is a job scaler for [HashiCorp Nomad]() and aims to be highly flexible so it can support a wide range of architectures and budgets.
+Sherpa is a job scaler for [HashiCorp Nomad](https://www.nomadproject.io/) and aims to be highly flexible so it can support a wide range of architectures and budgets.
 
 ## Download & Install
 
