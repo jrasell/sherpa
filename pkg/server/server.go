@@ -140,7 +140,10 @@ func (h *HTTPServer) setupNomadClient() error {
 
 func (h *HTTPServer) setupAutoScaling() {
 	h.logger.Debug().Msg("setting up Sherpa internal auto-scaling engine")
-	autoscaleCfg := &autoscale.Config{StrictChecking: h.cfg.Server.StrictPolicyChecking, Scaling: h.cfg.AutoScale}
+	autoscaleCfg := &autoscale.Config{
+		StrictChecking:  h.cfg.Server.StrictPolicyChecking,
+		ScalingInterval: h.cfg.Server.InternalAutoScalerEvalPeriod,
+	}
 	h.autoScale = autoscale.NewAutoScaleServer(h.logger, h.nomad, h.policyBackend, autoscaleCfg)
 	go h.autoScale.Run()
 }

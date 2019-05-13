@@ -43,7 +43,7 @@ func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p backend.PolicyBacke
 func (a *AutoScale) Run() {
 	a.logger.Info().Msg("starting Sherpa internal auto-scaling engine")
 
-	t := time.NewTicker(time.Second * time.Duration(a.cfg.Scaling.AutoscalingEvalInt))
+	t := time.NewTicker(time.Second * time.Duration(a.cfg.ScalingInterval))
 	defer t.Stop()
 
 	for {

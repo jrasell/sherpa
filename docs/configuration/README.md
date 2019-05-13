@@ -4,20 +4,20 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 
 ## Parameters
 
-* `--autoscaling-evaluation-interval` (int: 60) - If using the built-in autoscaler, this is the time period in seconds between evaluation runs.
-* `--bind-addr` (string: "127.0.0.1") - Specifies the address which the Sherpa HTTP server will bind to for network connectivity. 
-* `--bind-port` (uint16: 8000) - The address the HTTP server is bound to.
-* `--api-policy-engine-enabled` (bool: true) - Enables configuring scaling policies via the CLI and API. Conflicts with the Nomad meta engine.
-* `--consul-storage-backend-enabled` (bool: false) - Enables storing polices created via the API in Consul KV as a durable backend.
-* `--consul-storage-backend-path` (string: "sherpa/policies/") - The Consul KV path that will be used to store policies.
-* `--internal-auto-scaler-enabled` (bool: false) - Enables the Sherpa internal autoscaler, which will run periodically evaluating job resource utilization and making scaling decisions.
-* `--nomad-meta-policy-engine-enabled` (bool: false) - If enabled, job scaling policies will be read and updated using job meta parameters. Conflicts with the API engine.
-* `--strict-policy-checking-enabled` (bool: true) - Specifies whether Sherpa should strictly check all scaling requests against scaling policies.
-* `--log-format` (string: "auto") - Is the format at which to log to and can be "auto", "zerolog" or "human".
-* `--log-level` (string: "info") - The level at which Sherpa should log to. Valid log levels include WARN, INFO, or DEBUG in increasing order of verbosity.
-* `--log-use-color` (bool: true) - Specifies whether to use ANSI colour logging.
+* `--autoscaler-enabled` (bool: false) - Enable the internal autoscaling engine.
+* `--autoscaler-evaluation-interval` (int: 60) - The time period in seconds between autoscaling evaluation runs.
+* `--bind-addr` (string: "127.0.0.1) - The HTTP server address to bind to.
+* `--bind-port` (uint16: 8000) - The HTTP server port to bind to.
+* `--log-format` (string: "auto") - Specify the log format ("auto", "zerolog" or "human").
+* `--log-level` (string: "info") - Change the level used for logging.
+* `--log-use-color` (bool: true) - Use ANSI colors in logging output.
+* `--policy-engine-api-enabled` (bool: true) - Enable the Sherpa API to manage scaling policies.
+* `--policy-engine-nomad-meta-enabled` (bool: false) - Enable Nomad job meta lookups to manage scaling policies.
+* `--policy-engine-strict-checking-enabled` (bool: true) - When enabled, all scaling activities must pass through policy checks.
+* `--storage-consul-enabled` (bool: false) - Use Consul as a storage backend when using the API policy engine.
+* `--storage-consul-path` (string: "sherpa/policies/") - The Consul KV path that will be used to store policies.
 * `--tls-cert-key-path` (string: "") - Path to the TLS certificate key for the Sherpa server.
-* `--tls-cert-path` (string: "") - Path to the TLS certificate for the Sherpa server.
+* `--tls-cert-path (string: "")` - Path to the TLS certificate for the Sherpa server.
 
 ### Environment Variables
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	autoscaleCfg "github.com/jrasell/sherpa/pkg/config/autoscale"
 	logCfg "github.com/jrasell/sherpa/pkg/config/log"
 	serverCfg "github.com/jrasell/sherpa/pkg/config/server"
 	"github.com/jrasell/sherpa/pkg/logger"
@@ -23,10 +22,8 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 			runServer(cmd, args)
 		},
 	}
-
 	serverCfg.RegisterConfig(cmd)
 	serverCfg.RegisterTLSConfig(cmd)
-	autoscaleCfg.RegisterConfig(cmd)
 	logCfg.RegisterConfig(cmd)
 	rootCmd.AddCommand(cmd)
 
@@ -36,7 +33,6 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 func runServer(_ *cobra.Command, _ []string) {
 	serverConfig := serverCfg.GetConfig()
 	tlsConfig := serverCfg.GetTLSConfig()
-	autoscaleConfig := autoscaleCfg.GetConfig()
 
 	if err := verifyServerConfig(serverConfig); err != nil {
 		fmt.Println(err)
@@ -51,9 +47,8 @@ func runServer(_ *cobra.Command, _ []string) {
 	}
 
 	cfg := &server.Config{
-		AutoScale: &autoscaleConfig,
-		Server:    &serverConfig,
-		TLS:       &tlsConfig,
+		Server: &serverConfig,
+		TLS:    &tlsConfig,
 	}
 	srv := server.New(log.Logger, cfg)
 

@@ -17,8 +17,8 @@ type TLSConfig struct {
 }
 
 func (c *TLSConfig) MarshalZerologObject(e *zerolog.Event) {
-	e.Str("tls-cert-path", c.CertPath).
-		Str("tls-cert-key-path", c.CertKeyPath)
+	e.Str(configKeyServerTLSCertPath, c.CertPath).
+		Str(configKeyServerTLSCertKeyPath, c.CertKeyPath)
 }
 
 func GetTLSConfig() TLSConfig {

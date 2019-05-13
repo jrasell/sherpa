@@ -7,52 +7,57 @@ import (
 )
 
 const (
-	configKeyHTTPServerBindAddr              = "bind-addr"
-	configKeyHTTPServerBindAddrDefault       = "127.0.0.1"
-	configKeyHTTPServerPort                  = "bind-port"
-	configKeyHTTPServerPortDefault           = 8000
-	configKeyConsulStorageBackendPathDefault = "sherpa/policies/"
+	configKeyBindAddrDefault                     = "127.0.0.1"
+	configKeyBindPortDefault                     = 8000
+	configKeyStorageBackendConsulPathDefault     = "sherpa/policies/"
+	configKeyAutoscalerEvaluationIntervalDefault = 60
 
-	configKeyEnableAPIPolicyEngine       = "api-policy-engine-enabled"
-	configKeyConsulStorageBackendEnabled = "consul-storage-backend-enabled"
-	configKeyConsulStorageBackendPath    = "consul-storage-backend-path"
-	configKeyEnableNomadMetaPolicyEngine = "nomad-meta-policy-engine-enabled"
-	configKeyStrictPolicyChecking        = "strict-policy-checking-enabled"
-	configKeyEnableInternalAutoScaler    = "internal-auto-scaler-enabled"
+	configKeyBindAddr                          = "bind-addr"
+	configKeyBindPort                          = "bind-port"
+	configKeyAutoscalerEnabled                 = "autoscaler-enabled"
+	configKeyAutoscalerEvaluationInterval      = "autoscaler-evaluation-interval"
+	configKeyPolicyEngineAPIEnabled            = "policy-engine-api-enabled"
+	configKeyPolicyEngineNomadMetaEnabled      = "policy-engine-nomad-meta-enabled"
+	configKeyPolicyEngineStrictCheckingEnabled = "policy-engine-strict-checking-enabled"
+	configKeyStorageBackendConsulEnabled       = "storage-consul-enabled"
+	configKeyStorageBackendConsulPath          = "storage-consul-path"
 )
 
 type Config struct {
-	Bind                     string
-	Port                     uint16
-	APIPolicyEngine          bool
-	NomadMetaPolicyEngine    bool
-	StrictPolicyChecking     bool
-	InternalAutoScaler       bool
-	ConsulStorageBackend     bool
-	ConsulStorageBackendPath string
+	Bind                         string
+	ConsulStorageBackendPath     string
+	Port                         uint16
+	APIPolicyEngine              bool
+	NomadMetaPolicyEngine        bool
+	StrictPolicyChecking         bool
+	InternalAutoScaler           bool
+	ConsulStorageBackend         bool
+	InternalAutoScalerEvalPeriod int
 }
 
 func (c *Config) MarshalZerologObject(e *zerolog.Event) {
-	e.Str("bind", c.Bind).
-		Uint16("port", c.Port).
-		Bool("api-policy-engine-enabled", c.APIPolicyEngine).
-		Bool("nomad-meta-policy-engine-enabled", c.NomadMetaPolicyEngine).
-		Bool("strict-policy-checking-enabled", c.StrictPolicyChecking).
-		Bool("internal-autoscaler-enabled", c.InternalAutoScaler).
-		Bool("consul-storage-backend-enabled", c.ConsulStorageBackend).
-		Str("consul-storage-backend-path", c.ConsulStorageBackendPath)
+	e.Str(configKeyBindAddr, c.Bind).
+		Uint16(configKeyBindPort, c.Port).
+		Bool(configKeyPolicyEngineAPIEnabled, c.APIPolicyEngine).
+		Bool(configKeyPolicyEngineNomadMetaEnabled, c.NomadMetaPolicyEngine).
+		Bool(configKeyPolicyEngineStrictCheckingEnabled, c.StrictPolicyChecking).
+		Bool(configKeyAutoscalerEnabled, c.InternalAutoScaler).
+		Int(configKeyAutoscalerEvaluationInterval, c.InternalAutoScalerEvalPeriod).
+		Bool(configKeyStorageBackendConsulEnabled, c.ConsulStorageBackend).
+		Str(configKeyStorageBackendConsulPath, c.ConsulStorageBackendPath)
 }
 
 func GetConfig() Config {
 	return Config{
-		Bind:                     viper.GetString(configKeyHTTPServerBindAddr),
-		Port:                     uint16(viper.GetInt(configKeyHTTPServerPort)),
-		APIPolicyEngine:          viper.GetBool(configKeyEnableAPIPolicyEngine),
-		NomadMetaPolicyEngine:    viper.GetBool(configKeyEnableNomadMetaPolicyEngine),
-		StrictPolicyChecking:     viper.GetBool(configKeyStrictPolicyChecking),
-		InternalAutoScaler:       viper.GetBool(configKeyEnableInternalAutoScaler),
-		ConsulStorageBackend:     viper.GetBool(configKeyConsulStorageBackendEnabled),
-		ConsulStorageBackendPath: viper.GetString(configKeyConsulStorageBackendPath),
+		Bind:                         viper.GetString(configKeyBindAddr),
+		Port:                         uint16(viper.GetInt(configKeyBindPort)),
+		APIPolicyEngine:              viper.GetBool(configKeyPolicyEngineAPIEnabled),
+		NomadMetaPolicyEngine:        viper.GetBool(configKeyPolicyEngineNomadMetaEnabled),
+		StrictPolicyChecking:         viper.GetBool(configKeyPolicyEngineStrictCheckingEnabled),
+		InternalAutoScaler:           viper.GetBool(configKeyAutoscalerEnabled),
+		InternalAutoScalerEvalPeriod: viper.GetInt(configKeyAutoscalerEvaluationInterval),
+		ConsulStorageBackend:         viper.GetBool(configKeyStorageBackendConsulEnabled),
+		ConsulStorageBackendPath:     viper.GetString(configKeyStorageBackendConsulPath),
 	}
 }
 
@@ -61,9 +66,9 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyHTTPServerBindAddr
+			key          = configKeyBindAddr
 			longOpt      = "bind-addr"
-			defaultValue = configKeyHTTPServerBindAddrDefault
+			defaultValue = configKeyBindAddrDefault
 			description  = "The HTTP server address to bind to"
 		)
 
@@ -74,9 +79,9 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyHTTPServerPort
+			key          = configKeyBindPort
 			longOpt      = "bind-port"
-			defaultValue = configKeyHTTPServerPortDefault
+			defaultValue = configKeyBindPortDefault
 			description  = "The HTTP server port to bind to"
 		)
 
@@ -87,8 +92,8 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyEnableAPIPolicyEngine
-			longOpt      = "api-policy-engine-enabled"
+			key          = configKeyPolicyEngineAPIEnabled
+			longOpt      = "policy-engine-api-enabled"
 			defaultValue = true
 			description  = "Enable the Sherpa API to manage scaling policies"
 		)
@@ -100,8 +105,8 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyEnableNomadMetaPolicyEngine
-			longOpt      = "nomad-meta-policy-engine-enabled"
+			key          = configKeyPolicyEngineNomadMetaEnabled
+			longOpt      = "policy-engine-nomad-meta-enabled"
 			defaultValue = false
 			description  = "Enable Nomad job meta lookups to manage scaling policies"
 		)
@@ -113,8 +118,8 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyStrictPolicyChecking
-			longOpt      = "strict-policy-checking-enabled"
+			key          = configKeyPolicyEngineStrictCheckingEnabled
+			longOpt      = "policy-engine-strict-checking-enabled"
 			defaultValue = true
 			description  = "When enabled, all scaling activities must pass through policy checks"
 		)
@@ -126,8 +131,8 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyEnableInternalAutoScaler
-			longOpt      = "internal-auto-scaler-enabled"
+			key          = configKeyAutoscalerEnabled
+			longOpt      = "autoscaler-enabled"
 			defaultValue = false
 			description  = "Enable the internal autoscaling engine"
 		)
@@ -139,8 +144,21 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyConsulStorageBackendEnabled
-			longOpt      = "consul-storage-backend-enabled"
+			key          = configKeyAutoscalerEvaluationInterval
+			longOpt      = "autoscaler-evaluation-interval"
+			defaultValue = configKeyAutoscalerEvaluationIntervalDefault
+			description  = "The time period in seconds between autoscaling evaluation runs"
+		)
+
+		flags.Int(longOpt, defaultValue, description)
+		_ = viper.BindPFlag(key, flags.Lookup(longOpt))
+		viper.SetDefault(key, defaultValue)
+	}
+
+	{
+		const (
+			key          = configKeyStorageBackendConsulEnabled
+			longOpt      = "storage-consul-enabled"
 			defaultValue = false
 			description  = "Use Consul as a storage backend when using the API policy engine"
 		)
@@ -152,9 +170,9 @@ func RegisterConfig(cmd *cobra.Command) {
 
 	{
 		const (
-			key          = configKeyConsulStorageBackendPath
-			longOpt      = "consul-storage-backend-path"
-			defaultValue = configKeyConsulStorageBackendPathDefault
+			key          = configKeyStorageBackendConsulPath
+			longOpt      = "storage-consul-path"
+			defaultValue = configKeyStorageBackendConsulPathDefault
 			description  = "The Consul KV path that will be used to store policies"
 		)
 

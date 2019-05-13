@@ -1,14 +1,12 @@
 package server
 
 import (
-	autoscalecfg "github.com/jrasell/sherpa/pkg/config/autoscale"
 	serverCfg "github.com/jrasell/sherpa/pkg/config/server"
 )
 
 type Config struct {
-	Server    *serverCfg.Config
-	TLS       *serverCfg.TLSConfig
-	AutoScale *autoscalecfg.Config
+	Server *serverCfg.Config
+	TLS    *serverCfg.TLSConfig
 }
 
 const (

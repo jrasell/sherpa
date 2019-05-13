@@ -1,10 +1,8 @@
 package autoscale
 
-import "github.com/jrasell/sherpa/pkg/config/autoscale"
-
 type Config struct {
-	Scaling        *autoscale.Config
-	StrictChecking bool
+	ScalingInterval int
+	StrictChecking  bool
 }
 
 const (

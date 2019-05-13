@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterCobra(cmd *cobra.Command) {
-	viper.SetEnvPrefix(strings.ToUpper(cmd.Use))
+	viper.SetEnvPrefix(strings.ToUpper(cmd.Name()))
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 }
