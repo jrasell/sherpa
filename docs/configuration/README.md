@@ -16,6 +16,8 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 * `--policy-engine-strict-checking-enabled` (bool: true) - When enabled, all scaling activities must pass through policy checks.
 * `--storage-consul-enabled` (bool: false) - Use Consul as a storage backend when using the API policy engine.
 * `--storage-consul-path` (string: "sherpa/policies/") - The Consul KV path that will be used to store policies.
+* `--telemetry-statsd-address` (string: "") - Specifies the address of a statsd server to forward metrics to
+* `--telemetry-statsite-address` (string: "") - Specifies the address of a statsite server to forward metrics data to
 * `--tls-cert-key-path` (string: "") - Path to the TLS certificate key for the Sherpa server.
 * `--tls-cert-path (string: "")` - Path to the TLS certificate for the Sherpa server.
 

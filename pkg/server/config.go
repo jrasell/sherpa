@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	Server *serverCfg.Config
-	TLS    *serverCfg.TLSConfig
+	Server    *serverCfg.Config
+	TLS       *serverCfg.TLSConfig
+	Telemetry *serverCfg.TelemetryConfig
 }
 
 const (
@@ -32,4 +33,6 @@ const (
 	routeDeleteJobGroupScalingPolicyPattern = "/v1/policy/{job_id}/{group}"
 	routeDeleteJobScalingPolicyName         = "DeleteJobScalingPolicy"
 	routeDeleteJobScalingPolicyPattern      = "/v1/policy/{job_id}"
+
+	telemetryInterval = 10
 )
