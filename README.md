@@ -14,7 +14,7 @@ Sherpa is a job scaler for [HashiCorp Nomad](https://www.nomadproject.io/) and a
 
 ## Documentation
 
-Please refer to the [documentation](./docs/README.md) directory for guides to help with deploying and using Sherpa in your Nomad setup.
+Please refer to the [documentation](./docs) directory for guides to help with deploying and using Sherpa in your Nomad setup.
 
 ## Contributing
 
