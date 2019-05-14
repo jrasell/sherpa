@@ -10,8 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/pkg/errors"
-
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale"
 	"github.com/jrasell/sherpa/pkg/client"
@@ -19,6 +18,7 @@ import (
 	"github.com/jrasell/sherpa/pkg/policy/backend/consul"
 	"github.com/jrasell/sherpa/pkg/policy/backend/memory"
 	"github.com/jrasell/sherpa/pkg/server/router"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
@@ -30,6 +30,7 @@ type HTTPServer struct {
 	nomad         *api.Client
 	policyBackend backend.PolicyBackend
 	autoScale     *autoscale.AutoScale
+	telemetry     *metrics.InmemSink
 
 	http.Server
 	routes *routes
@@ -60,6 +61,7 @@ func (h *HTTPServer) logServerConfig() {
 	h.logger.Info().
 		Object("server", h.cfg.Server).
 		Object("tls", h.cfg.TLS).
+		Object("telemetry", h.cfg.Telemetry).
 		Msg("Sherpa server configuration")
 }
 
@@ -80,6 +82,11 @@ func (h *HTTPServer) setup() error {
 
 	r := router.WithRoutes(h.logger, *initialRoutes)
 	http.Handle("/", middlewareLogger(r, h.logger))
+
+	// Setup telemetry based on the config passed by the operator.
+	if err := h.setupTelemetry(); err != nil {
+		return errors.Wrap(err, "failed to setup telemetry handler")
+	}
 
 	// Run the TLS setup process so that if the user has configured a TLS certificate pair the
 	// server uses these.
