@@ -27,7 +27,7 @@ $ curl \
 
 ```json
 {
-  "EvaluationID: "d092fdc0-e1fe-2536-67d8-43af8ca798ac"
+  "EvaluationID": "d092fdc0-e1fe-2536-67d8-43af8ca798ac"
 }
 ```
 
@@ -58,6 +58,6 @@ $ curl \
 
 ```json
 {
-  "EvaluationID: "d092fdc0-e1fe-2536-67d8-43af8ca798ac"
+  "EvaluationID": "d092fdc0-e1fe-2536-67d8-43af8ca798ac"
 }
 ```
