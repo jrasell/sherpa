@@ -1,13 +1,14 @@
 package v1
 
 import (
+	"encoding/json"
 	"net/http"
 
+	metrics "github.com/armon/go-metrics"
 	"github.com/hashicorp/nomad/api"
 	serverCfg "github.com/jrasell/sherpa/pkg/config/server"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 const (
@@ -23,9 +24,10 @@ const (
 )
 
 type System struct {
-	logger zerolog.Logger
-	nomad  *api.Client
-	server *serverCfg.Config
+	logger    zerolog.Logger
+	nomad     *api.Client
+	server    *serverCfg.Config
+	telemetry *metrics.InmemSink
 }
 
 type SystemInfoResp struct {
@@ -36,11 +38,12 @@ type SystemInfoResp struct {
 	StrictPolicyChecking      bool
 }
 
-func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Config) *System {
+func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Config, tel *metrics.InmemSink) *System {
 	return &System{
-		logger: l,
-		nomad:  nomad,
-		server: server,
+		logger:    l,
+		nomad:     nomad,
+		server:    server,
+		telemetry: tel,
 	}
 }
 
@@ -73,6 +76,24 @@ func (h *System) GetInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to marshal HTTP response")
 		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSONResponse(w, out, http.StatusOK)
+}
+
+func (h *System) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	metricData, err := h.telemetry.DisplayMetrics(w, r)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to get latest telemetry data")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	out, err := json.Marshal(metricData)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to marshal HTTP response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
