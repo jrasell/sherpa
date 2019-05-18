@@ -3,10 +3,10 @@
 Sherpa is a fast and flexible job scaler for [HashiCorp Nomad](https://www.nomadproject.io/) capable of running in a number of different modes to suit your needs.
 
 ## Table of contents
-1. [API](./api/README.md) documentation
-1. [CLI](./commands/README.md) documentation
-1. [Sherpa server](./configuration/README.md) configuration documentation
-1. [Guides](./guides/README.md) to provide additional information on Sherpa behaviour and workflows
+1. [API](./api) documentation
+1. [CLI](./commands) documentation
+1. [Sherpa server](./configuration) configuration documentation
+1. [Guides](./guides) to provide additional information on Sherpa behaviour and workflows
 
 ## Server Run Modes
 
@@ -31,7 +31,7 @@ Policies are a method of controlling how and when job groups are autoscaled. Whe
 
 #### API Policy Engine
 
-Scaling policies can be written, updated and deleted via the API and CLI. These policies are then stored in one of the available [backends]() which has been enabled. The in-memory backend is not suitable for any environment other than development as the policies are lost when Sherpa is stopped. The Consul backend is ideal for non-dev environments and policies will be persisted after Sherpa restarts.
+Scaling policies can be written, updated and deleted via the API and CLI. These policies are then stored in one of the available [backends](./guides/policies.md#policy-storage-backend) which has been enabled. The in-memory backend is not suitable for any environment other than development as the policies are lost when Sherpa is stopped. The Consul backend is ideal for non-dev environments and policies will be persisted after Sherpa restarts.
 
 #### Nomad Job Meta Policy Engine
 
