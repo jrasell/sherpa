@@ -3,7 +3,7 @@ package server
 import (
 	"time"
 
-	"github.com/armon/go-metrics"
+	metrics "github.com/armon/go-metrics"
 	"github.com/jrasell/sherpa/pkg/build"
 )
 

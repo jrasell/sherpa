@@ -11,7 +11,7 @@ import (
 )
 
 func TestSystem_GetHealth(t *testing.T) {
-	s := NewSystemServer(zerolog.Logger{}, nil, nil)
+	s := NewSystemServer(zerolog.Logger{}, nil, nil, nil)
 
 	r := httptest.NewRequest("GET", "http://jrasell.com/v1/system/health", nil)
 	w := httptest.NewRecorder()
@@ -55,7 +55,7 @@ func TestSystem_GetInfo(t *testing.T) {
 		r := httptest.NewRequest("GET", "http://jrasell.com/v1/system/info", nil)
 		w := httptest.NewRecorder()
 
-		s := NewSystemServer(zerolog.Logger{}, nomadClient, tc.systemServerConfig)
+		s := NewSystemServer(zerolog.Logger{}, nomadClient, tc.systemServerConfig, nil)
 		s.GetInfo(w, r)
 
 		assert.Equal(t, tc.expectedRespCode, w.Code)

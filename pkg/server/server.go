@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/armon/go-metrics"
+	metrics "github.com/armon/go-metrics"
 	"github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale"
 	"github.com/jrasell/sherpa/pkg/client"
@@ -70,6 +70,11 @@ func (h *HTTPServer) setup() error {
 		return err
 	}
 
+	// Setup telemetry based on the config passed by the operator.
+	if err := h.setupTelemetry(); err != nil {
+		return errors.Wrap(err, "failed to setup telemetry handler")
+	}
+
 	h.setupPolicyBackend()
 
 	// If the server has been set to enable the internal autoscaler, set this up and start the
@@ -82,11 +87,6 @@ func (h *HTTPServer) setup() error {
 
 	r := router.WithRoutes(h.logger, *initialRoutes)
 	http.Handle("/", middlewareLogger(r, h.logger))
-
-	// Setup telemetry based on the config passed by the operator.
-	if err := h.setupTelemetry(); err != nil {
-		return errors.Wrap(err, "failed to setup telemetry handler")
-	}
 
 	// Run the TLS setup process so that if the user has configured a TLS certificate pair the
 	// server uses these.

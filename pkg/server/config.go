@@ -33,6 +33,8 @@ const (
 	routeDeleteJobGroupScalingPolicyPattern = "/v1/policy/{job_id}/{group}"
 	routeDeleteJobScalingPolicyName         = "DeleteJobScalingPolicy"
 	routeDeleteJobScalingPolicyPattern      = "/v1/policy/{job_id}"
+	routeGetMetricsName                     = "GetSystemMetrics"
+	routeGetMetricsPattern                  = "/v1/system/metrics"
 
 	telemetryInterval = 10
 )

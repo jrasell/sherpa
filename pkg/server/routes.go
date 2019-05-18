@@ -11,7 +11,7 @@ import (
 )
 
 type routes struct {
-	Health *systemV1.System
+	System *systemV1.System
 	Policy *policyV1.Policy
 	Scale  *scaleV1.Scale
 }
@@ -20,22 +20,28 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 	h.logger.Debug().Msg("setting up HTTP server routes")
 
 	// Setup our route servers with their required configuration.
-	h.routes.Health = systemV1.NewSystemServer(h.logger, h.nomad, h.cfg.Server)
+	h.routes.System = systemV1.NewSystemServer(h.logger, h.nomad, h.cfg.Server, h.telemetry)
 	h.routes.Scale = scaleV1.NewScaleServer(h.logger, h.cfg.Server.StrictPolicyChecking, h.policyBackend, h.nomad)
 	h.routes.Policy = policyV1.NewPolicyServer(h.logger, h.policyBackend)
 
-	healthRoutes := router.Routes{
+	systemRoutes := router.Routes{
 		router.Route{
 			Name:    routeSystemHealthName,
 			Method:  http.MethodGet,
 			Pattern: routeSystemHealthPattern,
-			Handler: h.routes.Health.GetHealth,
+			Handler: h.routes.System.GetHealth,
 		},
 		router.Route{
 			Name:    routeSystemInfoName,
 			Method:  http.MethodGet,
 			Pattern: routeSystemInfoPattern,
-			Handler: h.routes.Health.GetInfo,
+			Handler: h.routes.System.GetInfo,
+		},
+		router.Route{
+			Name:    routeGetMetricsName,
+			Method:  http.MethodGet,
+			Pattern: routeGetMetricsPattern,
+			Handler: h.routes.System.GetMetrics,
 		},
 	}
 
@@ -109,8 +115,8 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 				Handler: h.routes.Policy.DeleteJobPolicy,
 			},
 		}
-		return &router.RouteTable{healthRoutes, scaleRoutes, policyRoutes, apiPolicyEngineRoutes}
+		return &router.RouteTable{systemRoutes, scaleRoutes, policyRoutes, apiPolicyEngineRoutes}
 	}
 
-	return &router.RouteTable{healthRoutes, scaleRoutes, policyRoutes}
+	return &router.RouteTable{systemRoutes, scaleRoutes, policyRoutes}
 }

@@ -14,6 +14,11 @@ Show configuration details of the running server:
 $ sherpa system info
 ```
 
+Output the latest metric data points for the running server:
+```bash
+$ sherpa system metrics
+```
+
 ## Usage
 ```bash
 Usage:
@@ -23,4 +28,5 @@ Usage:
 Available Commands:
   health      Retrieve health information of a Sherpa server
   info        Retrieve information about a Sherpa server
+  metrics     Retrieve metrics from a Sherpa server
 ```
