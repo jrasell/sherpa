@@ -7,7 +7,7 @@ tools: ## Install the tools used to test and build
 
 build: ## Build Sherpa for development purposes
 	@echo "==> Running $@..."
-	govvv build -o sherpa ./cmd -version local -pkg github.com/jrasell/sherpa/pkg/build
+	govvv build -o sherpa ./cmd -version $(shell git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1) |cut -c 2- |awk '{print $1}')+dev -pkg github.com/jrasell/sherpa/pkg/build
 
 test: ## Run the Sherpa test suite with coverage
 	@echo "==> Running $@..."
