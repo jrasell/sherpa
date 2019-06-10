@@ -34,11 +34,15 @@ func Test_MergeWithDefaults(t *testing.T) {
 		{
 			policy: &GroupScalingPolicy{Enabled: true},
 			expectedResultPolicy: &GroupScalingPolicy{
-				Enabled:       true,
-				MinCount:      DefaultMinCount,
-				MaxCount:      DefaultMaxCount,
-				ScaleInCount:  DefaultScaleInCount,
-				ScaleOutCount: DefaultScaleOutCount,
+				Enabled:                           true,
+				MinCount:                          DefaultMinCount,
+				MaxCount:                          DefaultMaxCount,
+				ScaleInCount:                      DefaultScaleInCount,
+				ScaleOutCount:                     DefaultScaleOutCount,
+				ScaleOutCPUPercentageThreshold:    DefaultScaleOutCPUPercentageThreshold,
+				ScaleInCPUPercentageThreshold:     DefaultScaleInCPUPercentageThreshold,
+				ScaleOutMemoryPercentageThreshold: DefaultScaleOutMemoryPercentageThreshold,
+				ScaleInMemoryPercentageThreshold:  DefaultScaleInMemoryPercentageThreshold,
 			},
 		},
 	}

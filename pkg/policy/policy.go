@@ -16,11 +16,21 @@ type GroupScalingPolicy struct {
 
 	// ScaleInCount is the number which a task group is decremented by during scaling.
 	ScaleInCount int `json:"ScaleInCount"`
+
+	ScaleOutCPUPercentageThreshold    int `json:"ScaleOutCPUPercentageThreshold"`
+	ScaleOutMemoryPercentageThreshold int `json:"ScaleOutMemoryPercentageThreshold"`
+
+	ScaleInCPUPercentageThreshold    int `json:"ScaleInCPUPercentageThreshold"`
+	ScaleInMemoryPercentageThreshold int `json:"ScaleInMemoryPercentageThreshold"`
 }
 
 const (
-	DefaultMinCount      = 2
-	DefaultMaxCount      = 10
-	DefaultScaleOutCount = 1
-	DefaultScaleInCount  = 1
+	DefaultMinCount                          = 2
+	DefaultMaxCount                          = 10
+	DefaultScaleOutCount                     = 1
+	DefaultScaleInCount                      = 1
+	DefaultScaleOutCPUPercentageThreshold    = 80
+	DefaultScaleOutMemoryPercentageThreshold = 80
+	DefaultScaleInCPUPercentageThreshold     = 20
+	DefaultScaleInMemoryPercentageThreshold  = 20
 )

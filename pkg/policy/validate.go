@@ -29,4 +29,16 @@ func MergeWithDefaults(pol *GroupScalingPolicy) {
 	if pol.ScaleInCount == 0 {
 		pol.ScaleInCount = DefaultScaleInCount
 	}
+	if pol.ScaleOutCPUPercentageThreshold == 0 {
+		pol.ScaleOutCPUPercentageThreshold = DefaultScaleOutCPUPercentageThreshold
+	}
+	if pol.ScaleOutMemoryPercentageThreshold == 0 {
+		pol.ScaleOutMemoryPercentageThreshold = DefaultScaleOutMemoryPercentageThreshold
+	}
+	if pol.ScaleInCPUPercentageThreshold == 0 {
+		pol.ScaleInCPUPercentageThreshold = DefaultScaleInCPUPercentageThreshold
+	}
+	if pol.ScaleInMemoryPercentageThreshold == 0 {
+		pol.ScaleInMemoryPercentageThreshold = DefaultScaleInMemoryPercentageThreshold
+	}
 }
