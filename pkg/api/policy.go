@@ -21,6 +21,11 @@ type JobGroupPolicy struct {
 	MinCount      int
 	ScaleOutCount int
 	ScaleInCount  int
+
+	ScaleOutCPUPercentageThreshold    int
+	ScaleOutMemoryPercentageThreshold int
+	ScaleInCPUPercentageThreshold     int
+	ScaleInMemoryPercentageThreshold  int
 }
 
 func (p *Policies) List() (*map[string]map[string]*JobGroupPolicy, error) {
