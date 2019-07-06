@@ -27,7 +27,11 @@ $ curl \
       "MinCount": 2,
       "MaxCount": 10,
       "ScaleOutCount": 1,
-      "ScaleInCount": 1
+      "ScaleInCount": 1,
+      "ScaleOutCPUPercentageThreshold": 75,
+      "ScaleOutMemoryPercentageThreshold": 75,
+      "ScaleInCPUPercentageThreshold": 30,
+      "ScaleInMemoryPercentageThreshold": 30
     }
   },
   "my-other-job": {
@@ -36,7 +40,11 @@ $ curl \
       "MinCount": 2,
       "MaxCount": 10,
       "ScaleOutCount": 1,
-      "ScaleInCount": 1
+      "ScaleInCount": 1,
+      "ScaleOutCPUPercentageThreshold": 75,
+      "ScaleOutMemoryPercentageThreshold": 75,
+      "ScaleInCPUPercentageThreshold": 30,
+      "ScaleInMemoryPercentageThreshold": 30
     }
   }
 }
@@ -70,7 +78,11 @@ $ curl \
     "MinCount": 2,
     "MaxCount": 10,
     "ScaleOutCount": 1,
-    "ScaleInCount": 1
+    "ScaleInCount": 1,
+    "ScaleOutCPUPercentageThreshold": 75,
+    "ScaleOutMemoryPercentageThreshold": 75,
+    "ScaleInCPUPercentageThreshold": 30,
+    "ScaleInMemoryPercentageThreshold": 30
   }
 }
 ```
@@ -103,7 +115,11 @@ $ curl \
   "MinCount": 2,
   "MaxCount": 10,
   "ScaleOutCount": 1,
-  "ScaleInCount": 1
+  "ScaleInCount": 1,
+  "ScaleOutCPUPercentageThreshold": 75,
+  "ScaleOutMemoryPercentageThreshold": 75,
+  "ScaleInCPUPercentageThreshold": 30,
+  "ScaleInMemoryPercentageThreshold": 30
 }
 ```
 
@@ -128,7 +144,11 @@ This endpoint can be used to create or update the scaling policy for a job. This
     "MinCount": 2,
     "MaxCount": 10,
     "ScaleOutCount": 1,
-    "ScaleInCount": 1
+    "ScaleInCount": 1,
+    "ScaleOutCPUPercentageThreshold": 75,
+    "ScaleOutMemoryPercentageThreshold": 75,
+    "ScaleInCPUPercentageThreshold": 30,
+    "ScaleInMemoryPercentageThreshold": 30
   }
 }
 ```
@@ -163,7 +183,11 @@ This endpoint can be used to create or update the scaling policy for a job group
   "MinCount": 2,
   "MaxCount": 10,
   "ScaleOutCount": 1,
-  "ScaleInCount": 1
+  "ScaleInCount": 1,
+  "ScaleOutCPUPercentageThreshold": 75,
+  "ScaleOutMemoryPercentageThreshold": 75,
+  "ScaleInCPUPercentageThreshold": 30,
+  "ScaleInMemoryPercentageThreshold": 30
 }
 ```
 
