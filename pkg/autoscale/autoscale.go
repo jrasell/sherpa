@@ -62,10 +62,10 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		var count int
 
 		switch {
-		case cpuUsage < defaultCPUPercentageScaleInThreshold, memUsage < defaultMemoryPercentageScaleInThreshold:
+		case cpuUsage < pol.ScaleInCPUPercentageThreshold, memUsage < pol.ScaleInMemoryPercentageThreshold:
 			scalingDir = scale.DirectionIn
 			count = pol.ScaleInCount
-		case cpuUsage > defaultCPUPercentageScaleOutThreshold, memUsage > defaultMemoryPercentageScaleOutThreshold:
+		case cpuUsage > pol.ScaleOutCPUPercentageThreshold, memUsage > pol.ScaleOutMemoryPercentageThreshold:
 			scalingDir = scale.DirectionOut
 			count = pol.ScaleOutCount
 		}

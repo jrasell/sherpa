@@ -6,6 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	initPolicyCountSection = "{\"Enabled\":true,\"MaxCount\":16,\"MinCount\":4,\"ScaleOutCount\":2,\"ScaleInCount\":2,"
+	thresholdPolicySection = "\"ScaleOutCPUPercentageThreshold\":75,\"ScaleOutMemoryPercentageThreshold\":75,\"ScaleInCPUPercentageThreshold\":30,\"ScaleInMemoryPercentageThreshold\":30}"
+)
+
 func RegisterCommand(rootCmd *cobra.Command) error {
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -20,5 +25,5 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 }
 
 func runInit(_ *cobra.Command, _ []string) {
-	fmt.Println("{\"Enabled\": true,\"MaxCount\": 16,\"MinCount\": 4,\"ScaleOutCount\": 2,\"ScaleInCount\": 2}")
+	fmt.Println(initPolicyCountSection + thresholdPolicySection)
 }

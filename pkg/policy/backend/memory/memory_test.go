@@ -70,10 +70,14 @@ func TestPolicyBackend_Memory(t *testing.T) {
 
 func generateTestPolicy() *policy.GroupScalingPolicy {
 	return &policy.GroupScalingPolicy{
-		Enabled:       true,
-		MinCount:      1,
-		MaxCount:      10,
-		ScaleInCount:  1,
-		ScaleOutCount: 2,
+		Enabled:                           true,
+		MinCount:                          1,
+		MaxCount:                          10,
+		ScaleInCount:                      1,
+		ScaleOutCount:                     2,
+		ScaleOutCPUPercentageThreshold:    80,
+		ScaleInCPUPercentageThreshold:     20,
+		ScaleOutMemoryPercentageThreshold: 80,
+		ScaleInMemoryPercentageThreshold:  20,
 	}
 }
