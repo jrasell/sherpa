@@ -123,7 +123,7 @@ func (p *PolicyBackend) PutJobPolicy(job string, groupPolicies map[string]*polic
 	}
 
 	if !success {
-		return errors.New("failed")
+		return errors.New("failed to write job policy Consul transaction")
 	}
 
 	return nil
