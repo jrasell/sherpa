@@ -51,8 +51,8 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		// Maths. Find the current CPU and memory utilisation in percentage based on the total
 		// available resources to the group, compared to their configured maximum based on the
 		// resource stanza.
-		cpuUsage := resourceUsage[group].cpu / resourceInfo[group].cpu * 100
-		memUsage := resourceUsage[group].mem / resourceInfo[group].mem * 100
+		cpuUsage := resourceUsage[group].cpu * 100 / resourceInfo[group].cpu
+		memUsage := resourceUsage[group].mem * 100 / resourceInfo[group].mem
 		a.logger.Debug().
 			Int("mem-usage-percentage", memUsage).
 			Int("cpu-usage-percentage", cpuUsage).
