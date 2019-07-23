@@ -109,6 +109,10 @@ func (a *AutoScale) getJobAllocations(jobID string, policies map[string]*policy.
 			break
 		}
 
+		if !(allocs[i].ClientStatus == "running" || allocs[i].ClientStatus == "pending") {
+			continue
+		}
+
 		allocInfo, _, err := a.nomad.Allocations().Info(allocs[i].ID, nil)
 		if err != nil {
 			return out, nil, err
