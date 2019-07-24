@@ -42,20 +42,38 @@ func (m *MetaWatcher) Run() {
 			m.logger.Debug().Msg("meta watcher last index has not changed")
 			continue
 		}
+		m.logger.Debug().
+			Uint64("old", q.WaitIndex).
+			Uint64("new", meta.LastIndex).
+			Msg("meta watcher last index has changed")
 
-		m.logger.Debug().Msg("meta watcher last index has changed")
+		// Update our last tracked index on this run to match the meta returned from the API.
 		maxFound = meta.LastIndex
 
+		// Iterate over all the returned jobs.
 		for i := range jobs {
-			if !m.indexHasChange(jobs[i].ModifyIndex, maxFound) {
+
+			// If the change index on the job is not newer than the previously recorded last index
+			// we should continue to the next job. It is important here to use the lastChangeIndex
+			// from the MetaWatcher as we want to process all jobs which have updated past this
+			// index.
+			if !m.indexHasChange(jobs[i].ModifyIndex, m.lastChangeIndex) {
 				continue
 			}
 
-			maxFound = jobs[i].ModifyIndex
+			m.logger.Debug().
+				Uint64("old", m.lastChangeIndex).
+				Uint64("new", jobs[i].ModifyIndex).
+				Str("job", jobs[i].ID).
+				Msg("job modify index has changed is greater than last recorded")
 
+			maxFound = jobs[i].ModifyIndex
 			go m.readJobMeta(jobs[i].ID)
 		}
 
+		// Update the Nomad API wait index to start long polling from the correct point and update
+		// our recorded lastChangeIndex so we have the correct point to use during the next API
+		// return.
 		q.WaitIndex = maxFound
 		m.lastChangeIndex = maxFound
 	}
