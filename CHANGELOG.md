@@ -5,6 +5,7 @@ IMPROVEMENTS:
  
 BUG FIXES:
  * Fix incorrect error message return within Consul backend [[GH-11]](https://github.com/jrasell/sherpa/pull/11)
+ * Fix internal autoscaler calculations to miltiply first [[GH17]](https://github.com/jrasell/sherpa/pull/17)
 
 ## 0.0.1 (18 May, 2019)
 
