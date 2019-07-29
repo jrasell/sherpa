@@ -109,7 +109,7 @@ func (a *AutoScale) getJobAllocations(jobID string, policies map[string]*policy.
 			break
 		}
 
-		if !(allocs[i].ClientStatus == "running" || allocs[i].ClientStatus == "pending") {
+		if !(allocs[i].ClientStatus == nomad.AllocClientStatusRunning || allocs[i].ClientStatus == nomad.AllocClientStatusPending) {
 			continue
 		}
 
