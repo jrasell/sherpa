@@ -6,6 +6,7 @@ IMPROVEMENTS:
 BUG FIXES:
  * Fix incorrect error message return within Consul backend [[GH-11]](https://github.com/jrasell/sherpa/pull/11)
  * Fix internal autoscaler calculations to miltiply first [[GH17]](https://github.com/jrasell/sherpa/pull/17)
+ * Filter out the allocations from ResourceTracker that aren't actively running or pending [[GH-18]](https://github.com/jrasell/sherpa/pull/18)
 
 ## 0.0.1 (18 May, 2019)
 
