@@ -26,10 +26,11 @@ func NewMetaWatcher(l zerolog.Logger, nomad *api.Client, p backend.PolicyBackend
 func (m *MetaWatcher) Run() {
 	m.logger.Info().Msg("starting Sherpa Nomad meta policy engine")
 
+	var maxFound uint64
+
 	q := &api.QueryOptions{WaitTime: 5 * time.Minute}
 
 	for {
-		var maxFound uint64
 
 		jobs, meta, err := m.nomad.Jobs().List(q)
 		if err != nil {
@@ -46,9 +47,6 @@ func (m *MetaWatcher) Run() {
 			Uint64("old", q.WaitIndex).
 			Uint64("new", meta.LastIndex).
 			Msg("meta watcher last index has changed")
-
-		// Update our last tracked index on this run to match the meta returned from the API.
-		maxFound = meta.LastIndex
 
 		// Iterate over all the returned jobs.
 		for i := range jobs {
@@ -74,7 +72,7 @@ func (m *MetaWatcher) Run() {
 		// Update the Nomad API wait index to start long polling from the correct point and update
 		// our recorded lastChangeIndex so we have the correct point to use during the next API
 		// return.
-		q.WaitIndex = maxFound
+		q.WaitIndex = meta.LastIndex
 		m.lastChangeIndex = maxFound
 	}
 }
