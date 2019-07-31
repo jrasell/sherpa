@@ -65,7 +65,7 @@ func (m *MetaWatcher) Run() {
 				Str("job", jobs[i].ID).
 				Msg("job modify index has changed is greater than last recorded")
 
-			maxFound = jobs[i].ModifyIndex
+			maxFound = m.maxFound(jobs[i].ModifyIndex, maxFound)
 			go m.readJobMeta(jobs[i].ID)
 		}
 
@@ -82,4 +82,11 @@ func (m *MetaWatcher) indexHasChange(new, old uint64) bool {
 		return false
 	}
 	return true
+}
+
+func (m *MetaWatcher) maxFound(new, old uint64) uint64 {
+	if new <= old {
+		return old
+	}
+	return new
 }
