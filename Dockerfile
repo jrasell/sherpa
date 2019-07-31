@@ -13,9 +13,11 @@ RUN buildDeps=' \
         ' \
         set -x \
         && apk --no-cache add $buildDeps ca-certificates \
-        && wget -O sherpa https://github.com/jrasell/sherpa/releases/download/v0.0.1/sherpa_0.0.1_linux_amd64 \
+        && wget -O sherpa https://github.com/jrasell/sherpa/releases/download/v${SHERPA_VERSION}/sherpa_${SHERPA_VERSION}_linux_amd64 \
         && chmod +x /usr/bin/sherpa \
         && apk del $buildDeps \
         && echo "Build complete."
 
-CMD ["sherpa", "--help"]
+ENTRYPOINT ["sherpa"]
+
+CMD ["--help"]

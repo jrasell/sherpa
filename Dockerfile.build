@@ -33,4 +33,6 @@ RUN \
         && chmod +x /usr/bin/sherpa \
         && echo "Build complete."
 
-CMD ["sherpa", "--help"]
+ENTRYPOINT ["sherpa"]
+
+CMD ["--help"]
