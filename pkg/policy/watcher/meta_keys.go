@@ -7,6 +7,8 @@ import (
 )
 
 func (m *MetaWatcher) readJobMeta(jobID string) {
+	m.logger.Debug().Str("job", jobID).Msg("reading job group meta stanzas")
+
 	info, _, err := m.nomad.Jobs().Info(jobID, nil)
 	if err != nil {
 		m.logger.Error().Err(err).Msg("failed to call Nomad API for job information")
