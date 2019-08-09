@@ -103,6 +103,10 @@ func (a *AutoScale) getJobAllocations(jobID string, policies map[string]*policy.
 	var allocList []*nomad.Allocation // nolint:prealloc
 
 	allocs, _, err := a.nomad.Jobs().Allocations(jobID, false, nil)
+	if err != nil {
+		return out, nil, err
+	}
+
 	for i := range allocs {
 
 		if !policies[allocs[i].TaskGroup].Enabled {
