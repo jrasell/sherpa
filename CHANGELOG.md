@@ -1,4 +1,4 @@
-## 0.0.2 (Unreleased)
+## 0.0.2 (9 August, 2019)
 
 IMPROVEMENTS:
  * Scaling policies now support fields to manage internal scaling memory and CPU usage thresholds [[GH-9]](https://github.com/jrasell/sherpa/pull/9)
