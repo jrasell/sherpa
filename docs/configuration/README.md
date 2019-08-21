@@ -6,6 +6,7 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 
 * `--autoscaler-enabled` (bool: false) - Enable the internal autoscaling engine.
 * `--autoscaler-evaluation-interval` (int: 60) - The time period in seconds between autoscaling evaluation runs.
+* `--autoscaler-num-threads` (int: 3) - Specifies the number of parallel autoscaler threads to run.
 * `--bind-addr` (string: "127.0.0.1) - The HTTP server address to bind to.
 * `--bind-port` (uint16: 8000) - The HTTP server port to bind to.
 * `--log-format` (string: "auto") - Specify the log format ("auto", "zerolog" or "human").
