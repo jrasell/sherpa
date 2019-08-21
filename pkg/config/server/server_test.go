@@ -19,4 +19,5 @@ func Test_ServerConfig(t *testing.T) {
 	assert.Equal(t, true, cfg.StrictPolicyChecking)
 	assert.Equal(t, false, cfg.InternalAutoScaler)
 	assert.Equal(t, configKeyStorageBackendConsulPathDefault, cfg.ConsulStorageBackendPath)
+	assert.Equal(t, configKeyAutoscalerThreadNumberDefault, cfg.InternalAutoScalerNumThreads)
 }

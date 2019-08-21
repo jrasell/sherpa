@@ -16,6 +16,8 @@ const (
 	configKeyBindPort                          = "bind-port"
 	configKeyAutoscalerEnabled                 = "autoscaler-enabled"
 	configKeyAutoscalerEvaluationInterval      = "autoscaler-evaluation-interval"
+	configKeyAutoscalerThreadNumber            = "autoscaler-num-threads"
+	configKeyAutoscalerThreadNumberDefault     = 3
 	configKeyPolicyEngineAPIEnabled            = "policy-engine-api-enabled"
 	configKeyPolicyEngineNomadMetaEnabled      = "policy-engine-nomad-meta-enabled"
 	configKeyPolicyEngineStrictCheckingEnabled = "policy-engine-strict-checking-enabled"
@@ -33,6 +35,7 @@ type Config struct {
 	InternalAutoScaler           bool
 	ConsulStorageBackend         bool
 	InternalAutoScalerEvalPeriod int
+	InternalAutoScalerNumThreads int
 }
 
 func (c *Config) MarshalZerologObject(e *zerolog.Event) {
@@ -43,6 +46,7 @@ func (c *Config) MarshalZerologObject(e *zerolog.Event) {
 		Bool(configKeyPolicyEngineStrictCheckingEnabled, c.StrictPolicyChecking).
 		Bool(configKeyAutoscalerEnabled, c.InternalAutoScaler).
 		Int(configKeyAutoscalerEvaluationInterval, c.InternalAutoScalerEvalPeriod).
+		Int(configKeyAutoscalerThreadNumber, c.InternalAutoScalerNumThreads).
 		Bool(configKeyStorageBackendConsulEnabled, c.ConsulStorageBackend).
 		Str(configKeyStorageBackendConsulPath, c.ConsulStorageBackendPath)
 }
@@ -56,6 +60,7 @@ func GetConfig() Config {
 		StrictPolicyChecking:         viper.GetBool(configKeyPolicyEngineStrictCheckingEnabled),
 		InternalAutoScaler:           viper.GetBool(configKeyAutoscalerEnabled),
 		InternalAutoScalerEvalPeriod: viper.GetInt(configKeyAutoscalerEvaluationInterval),
+		InternalAutoScalerNumThreads: viper.GetInt(configKeyAutoscalerThreadNumber),
 		ConsulStorageBackend:         viper.GetBool(configKeyStorageBackendConsulEnabled),
 		ConsulStorageBackendPath:     viper.GetString(configKeyStorageBackendConsulPath),
 	}
@@ -148,6 +153,19 @@ func RegisterConfig(cmd *cobra.Command) {
 			longOpt      = "autoscaler-evaluation-interval"
 			defaultValue = configKeyAutoscalerEvaluationIntervalDefault
 			description  = "The time period in seconds between autoscaling evaluation runs"
+		)
+
+		flags.Int(longOpt, defaultValue, description)
+		_ = viper.BindPFlag(key, flags.Lookup(longOpt))
+		viper.SetDefault(key, defaultValue)
+	}
+
+	{
+		const (
+			key          = configKeyAutoscalerThreadNumber
+			longOpt      = "autoscaler-num-threads"
+			defaultValue = configKeyAutoscalerThreadNumberDefault
+			description  = "Specifies the number of parallel autoscaler threads to run"
 		)
 
 		flags.Int(longOpt, defaultValue, description)

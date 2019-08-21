@@ -54,6 +54,8 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		cpuUsage := resourceUsage[group].cpu * 100 / resourceInfo[group].cpu
 		memUsage := resourceUsage[group].mem * 100 / resourceInfo[group].mem
 		a.logger.Debug().
+			Str("job", jobID).
+			Str("group", group).
 			Int("mem-usage-percentage", memUsage).
 			Int("cpu-usage-percentage", cpuUsage).
 			Msg("resource utilisation calculation")
