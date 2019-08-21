@@ -26,7 +26,7 @@ $ sherpa policy write example policy.json
 
 Create a policy for a job named example and group named cache:
 ```bash
-$ sherpa policy read --policy-group-name=cache example policy.json
+$ sherpa policy write --policy-group-name=cache example policy.json
 ```
 
 Delete the policy for a job named example:
