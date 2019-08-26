@@ -1,4 +1,7 @@
-## 0.0.3 (Unreleased)
+## 0.1.0 (Unreleased)
+
+IMPROVEMENTS:
+* Use a goroutine pool within autoscaler to limit the number of concurrently running autoscaling threads [[GH-24]](https://github.com/jrasell/sherpa/pull/24)
 
 ## 0.0.2 (9 August, 2019)
 
