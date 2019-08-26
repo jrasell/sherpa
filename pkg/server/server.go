@@ -80,7 +80,9 @@ func (h *HTTPServer) setup() error {
 	// If the server has been set to enable the internal autoscaler, set this up and start the
 	// process running.
 	if h.cfg.Server.InternalAutoScaler {
-		h.setupAutoScaling()
+		if err := h.setupAutoScaling(); err != nil {
+			return errors.Wrap(err, "failed to setup internal autoscaler")
+		}
 	}
 
 	initialRoutes := h.setupRoutes()
@@ -145,14 +147,22 @@ func (h *HTTPServer) setupNomadClient() error {
 	return nil
 }
 
-func (h *HTTPServer) setupAutoScaling() {
+func (h *HTTPServer) setupAutoScaling() error {
 	h.logger.Debug().Msg("setting up Sherpa internal auto-scaling engine")
 	autoscaleCfg := &autoscale.Config{
 		StrictChecking:  h.cfg.Server.StrictPolicyChecking,
 		ScalingInterval: h.cfg.Server.InternalAutoScalerEvalPeriod,
+		ScalingThreads:  h.cfg.Server.InternalAutoScalerNumThreads,
 	}
-	h.autoScale = autoscale.NewAutoScaleServer(h.logger, h.nomad, h.policyBackend, autoscaleCfg)
+
+	as, err := autoscale.NewHandler(h.logger, h.nomad, h.policyBackend, autoscaleCfg)
+	if err != nil {
+		return err
+	}
+	h.autoScale = as
 	go h.autoScale.Run()
+
+	return nil
 }
 
 func (h *HTTPServer) setupListener() net.Listener {

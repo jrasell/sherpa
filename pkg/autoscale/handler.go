@@ -7,6 +7,7 @@ import (
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
+	"github.com/panjf2000/ants"
 	"github.com/rs/zerolog"
 )
 
@@ -17,6 +18,7 @@ type AutoScale struct {
 	scaler scale.Scale
 
 	policyBackend backend.PolicyBackend
+	pool          *ants.PoolWithFunc
 	state         *state
 }
 
@@ -29,8 +31,13 @@ type scalableResources struct {
 	mem int
 }
 
-func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p backend.PolicyBackend, cfg *Config) *AutoScale {
-	return &AutoScale{
+type workerPayload struct {
+	jobID  string
+	policy map[string]*policy.GroupScalingPolicy
+}
+
+func NewHandler(l zerolog.Logger, n *nomad.Client, p backend.PolicyBackend, cfg *Config) (*AutoScale, error) {
+	as := AutoScale{
 		cfg:           cfg,
 		logger:        l,
 		nomad:         n,
@@ -38,6 +45,14 @@ func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p backend.PolicyBacke
 		scaler:        scale.NewScaler(n, l, cfg.StrictChecking),
 		state:         &state{},
 	}
+
+	pool, err := as.createWorkerPool()
+	if err != nil {
+		return nil, err
+	}
+	as.pool = pool
+
+	return &as, nil
 }
 
 func (a *AutoScale) Run() {
@@ -45,6 +60,8 @@ func (a *AutoScale) Run() {
 
 	t := time.NewTicker(time.Second * time.Duration(a.cfg.ScalingInterval))
 	defer t.Stop()
+
+	defer a.pool.Release()
 
 	for {
 		select {
@@ -73,8 +90,11 @@ func (a *AutoScale) Run() {
 			}
 
 			for job := range allPolicies {
-				go a.runScalingCycle(job, allPolicies[job])
+				if err := a.pool.Invoke(&workerPayload{jobID: job, policy: allPolicies[job]}); err != nil {
+					a.logger.Error().Err(err).Msg("failed to invoke autoscaling worker thread")
+				}
 			}
+
 			a.setScalingInProgressFalse()
 		}
 	}
@@ -88,6 +108,21 @@ func (a *AutoScale) setScalingInProgressFalse() {
 	a.state.inProgress = false
 }
 
-func (a *AutoScale) runScalingCycle(job string, policy map[string]*policy.GroupScalingPolicy) {
-	a.autoscaleJob(job, policy)
+// createWorkerPool is responsible for building the ants goroutine worker pool with the number of
+// threads controlled by the operator configured value.
+func (a *AutoScale) createWorkerPool() (*ants.PoolWithFunc, error) {
+	return ants.NewPoolWithFunc(
+		ants.Options{
+			Capacity:       a.cfg.ScalingThreads,
+			ExpiryDuration: 60 * time.Second,
+			PoolFunc: func(payload interface{}) {
+				req, ok := payload.(*workerPayload)
+				if !ok {
+					a.logger.Error().Msg("autoscaler worker pool received unexpected payload type")
+					return
+				}
+				a.autoscaleJob(req.jobID, req.policy)
+			},
+		},
+	)
 }
