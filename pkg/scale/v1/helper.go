@@ -42,7 +42,7 @@ func payloadOrPolicyCount(payloadCount int, policy *policy.GroupScalingPolicy, d
 	return 0, errors.New("all possible checks failed to obtain correct count")
 }
 
-func writeJSONResponse(w http.ResponseWriter, bytes []byte, statusCode int) {
+func writeJSONResponse(w http.ResponseWriter, bytes []byte, statusCode int) { // nolint:unparam
 	w.Header().Set(headerKeyContentType, headerValueContentTypeJSON)
 	w.WriteHeader(statusCode)
 	if _, err := w.Write(bytes); err != nil {

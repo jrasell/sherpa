@@ -1,29 +1,33 @@
 package v1
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/nomad/api"
-	"github.com/jrasell/sherpa/pkg/policy/backend"
+	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
+	"github.com/jrasell/sherpa/pkg/state"
+	stateBackend "github.com/jrasell/sherpa/pkg/state/scale"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
 type Scale struct {
 	logger         zerolog.Logger
-	policyBackend  backend.PolicyBackend
+	policyBackend  policyBackend.PolicyBackend
+	stateBackend   stateBackend.Backend
 	strictChecking bool
 	scaler         scale.Scale
 }
 
-func NewScaleServer(l zerolog.Logger, strict bool, backend backend.PolicyBackend, c *api.Client) *Scale {
+func NewScaleServer(l zerolog.Logger, strict bool, backend policyBackend.PolicyBackend, state stateBackend.Backend, c *api.Client) *Scale {
 	return &Scale{
 		logger:         l,
-		scaler:         scale.NewScaler(c, l, strict),
+		scaler:         scale.NewScaler(c, l, state, strict),
 		policyBackend:  backend,
+		stateBackend:   state,
 		strictChecking: strict,
 	}
 }
@@ -61,7 +65,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq})
+	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI)
 	if err != nil {
 		s.logger.Error().
 			Err(err).
@@ -83,12 +87,18 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.logger.Info().
-		Str("warnings", scaleResp.Warnings).
 		Str("job", jobID).
 		Str("group", groupID).
 		Msg("successfully scaled in Nomad job group")
 
-	writeJSONResponse(w, []byte(fmt.Sprintf("{\"EvaluationID\":\"%s\"}", scaleResp.EvalID)), http.StatusOK)
+	bytes, err := json.Marshal(scaleResp)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to marshal scaling response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSONResponse(w, bytes, http.StatusOK)
 }
 
 func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +135,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq})
+	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI)
 	if err != nil {
 		s.logger.Error().
 			Err(err).
@@ -147,10 +157,16 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.logger.Info().
-		Str("warnings", scaleResp.Warnings).
 		Str("job", jobID).
 		Str("group", groupID).
 		Msg("successfully scaled out Nomad job group")
 
-	writeJSONResponse(w, []byte(fmt.Sprintf("{\"EvaluationID\":\"%s\"}", scaleResp.EvalID)), http.StatusOK)
+	bytes, err := json.Marshal(scaleResp)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to marshal scaling response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSONResponse(w, bytes, http.StatusOK)
 }

@@ -4,6 +4,7 @@ import (
 	nomad "github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/jrasell/sherpa/pkg/scale"
+	"github.com/jrasell/sherpa/pkg/state"
 )
 
 func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.GroupScalingPolicy) {
@@ -86,7 +87,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	// If group scaling requests have been added to the array for the job that is currently being
 	// checked, trigger a scaling event.
 	if len(scaleReq) > 0 {
-		resp, _, err := a.scaler.Trigger(jobID, scaleReq)
+		resp, _, err := a.scaler.Trigger(jobID, scaleReq, state.SourceInternalAutoscaler)
 		if err != nil {
 			a.logger.Error().Str("job", jobID).Err(err).Msg("failed to trigger scaling of job")
 		}
@@ -94,7 +95,8 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		if resp != nil {
 			a.logger.Info().
 				Str("job", jobID).
-				Str("evaluation-id", resp.EvalID).
+				Str("id", resp.ID.String()).
+				Str("evaluation-id", resp.EvaluationID).
 				Msg("successfully triggered autoscaling of job")
 		}
 	}

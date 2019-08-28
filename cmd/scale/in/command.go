@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
 	scaleCfg "github.com/jrasell/sherpa/pkg/config/scale"
@@ -60,6 +61,11 @@ func runJobGroupScaleIn(c *api.Client, job, group string, count int) int {
 		return sysexits.Software
 	}
 
-	fmt.Println("Evaluation ID:", resp.EvaluationID)
+	out := []string{
+		fmt.Sprintf("ID|%s", resp.ID),
+		fmt.Sprintf("EvalID|%v", resp.EvaluationID),
+	}
+
+	fmt.Println(helper.FormatKV(out))
 	return sysexits.OK
 }

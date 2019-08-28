@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
-	"github.com/ryanuber/columnize"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -63,11 +63,5 @@ func runList(_ *cobra.Command, args []string) {
 				job, group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.ScaleInCount, pol.ScaleOutCount))
 		}
 	}
-	fmt.Println(formatList(out))
-}
-
-func formatList(in []string) string {
-	columnConf := columnize.DefaultConfig()
-	columnConf.Empty = "<none>"
-	return columnize.Format(in, columnConf)
+	fmt.Println(helper.FormatList(out))
 }

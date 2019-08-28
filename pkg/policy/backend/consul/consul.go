@@ -25,7 +25,7 @@ func NewConsulPolicyBackend(log zerolog.Logger, path string) backend.PolicyBacke
 	consul, _ := client.NewConsulClient()
 
 	return &PolicyBackend{
-		path:   path,
+		path:   path + "policies/",
 		logger: log,
 		kv:     consul.KV(),
 	}

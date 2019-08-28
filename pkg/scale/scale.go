@@ -5,60 +5,26 @@ import (
 	"strings"
 
 	"github.com/hashicorp/nomad/api"
-	"github.com/jrasell/sherpa/pkg/policy"
+	"github.com/jrasell/sherpa/pkg/state"
+	"github.com/jrasell/sherpa/pkg/state/scale"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
 var _ Scale = (*Scaler)(nil)
 
-// Scale is the interface used for scaling a Nomad job.
-type Scale interface {
-	// Trigger performs scaling of 1 or more job groups which belong to the same job.
-	Trigger(string, []*GroupReq) (*api.JobRegisterResponse, int, error)
-
-	checkJobGroupExists(*api.Job, string) *api.TaskGroup
-
-	getNewGroupCount(*api.TaskGroup, *GroupReq) int
-	checkNewGroupCount(int, *GroupReq) error
-}
-
-// GroupReq is a single item of scaling information for a single job group.
-type GroupReq struct {
-
-	// Direction is the scaling direction which the group is requested to change.
-	Direction Direction
-
-	// Count is the number by which to change the count by in the desired direction. This
-	// information can also be found within the GroupScalingPolicy, but the API and the internal
-	// autoscaler have different ways in which to process data so it is their responsibility to
-	// populate this field for use and moves this logic away from the trigger.
-	Count int
-
-	// GroupName is the name of the job group to scale in this request.
-	GroupName string
-
-	// GroupScalingPolicy should include the job group scaling policy if it exists within the
-	// Sherpa server.
-	GroupScalingPolicy *policy.GroupScalingPolicy
-}
-
-func (g *GroupReq) MarshalZerologObject(e *zerolog.Event) {
-	e.Str("direction", g.Direction.String()).
-		Int("count", g.Count).
-		Str("group", g.GroupName)
-}
-
 type Scaler struct {
 	logger      zerolog.Logger
 	nomadClient *api.Client
+	state       scale.Backend
 	strict      bool
 }
 
-func NewScaler(c *api.Client, l zerolog.Logger, strictChecking bool) Scale {
+func NewScaler(c *api.Client, l zerolog.Logger, state scale.Backend, strictChecking bool) Scale {
 	return &Scaler{
 		logger:      l,
 		nomadClient: c,
+		state:       state,
 		strict:      strictChecking,
 	}
 }
@@ -69,7 +35,7 @@ func NewScaler(c *api.Client, l zerolog.Logger, strictChecking bool) Scale {
 //		- the Nomad API job register response
 //		- the HTTP return code, used for the Sherpa API
 //		- any error
-func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq) (*api.JobRegisterResponse, int, error) {
+func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq, source state.Source) (*ScalingResponse, int, error) {
 
 	// In order to submit a job for scaling we need to read the entire job back to Nomad as it does
 	// not currently have convenience methods for changing job group counts.
@@ -97,10 +63,25 @@ func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq) (*api.JobRegisterR
 	}
 
 	resp, err := s.triggerNomadRegister(job)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
+
+	return s.handleEndState(jobID, resp, err, groupReqs, source)
+}
+
+func (s *Scaler) handleEndState(job string, apiResp *api.JobRegisterResponse, apiErr error, groupReqs []*GroupReq,
+	source state.Source) (*ScalingResponse, int, error) {
+
+	eval := ""
+
+	if apiResp != nil {
+		eval = apiResp.EvalID
 	}
-	return resp, http.StatusOK, nil
+
+	scaleID := s.sendScalingEventToState(job, eval, source, groupReqs, apiErr)
+
+	if apiErr != nil {
+		return nil, http.StatusInternalServerError, apiErr
+	}
+	return &ScalingResponse{ID: scaleID, EvaluationID: eval}, http.StatusOK, nil
 }
 
 func (s *Scaler) triggerWithStrictChecking(job *api.Job, groupReqs []*GroupReq) bool {

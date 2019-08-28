@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
-	"github.com/ryanuber/columnize"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -65,12 +65,6 @@ func runInfo(_ *cobra.Command, _ []string) {
 	// then we don't want to just print the header so perform a check so the
 	// CLI is nice and tidy.
 	if len(out) > 1 {
-		fmt.Println(formatList(out))
+		fmt.Println(helper.FormatList(out))
 	}
-}
-
-func formatList(in []string) string {
-	columnConf := columnize.DefaultConfig()
-	columnConf.Empty = "<none>"
-	return columnize.Format(in, columnConf)
 }

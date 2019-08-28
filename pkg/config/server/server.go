@@ -9,7 +9,7 @@ import (
 const (
 	configKeyBindAddrDefault                     = "127.0.0.1"
 	configKeyBindPortDefault                     = 8000
-	configKeyStorageBackendConsulPathDefault     = "sherpa/policies/"
+	configKeyStorageBackendConsulPathDefault     = "sherpa/"
 	configKeyAutoscalerEvaluationIntervalDefault = 60
 
 	configKeyBindAddr                          = "bind-addr"

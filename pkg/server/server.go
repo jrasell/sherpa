@@ -14,10 +14,14 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale"
 	"github.com/jrasell/sherpa/pkg/client"
-	"github.com/jrasell/sherpa/pkg/policy/backend"
+	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/policy/backend/consul"
-	"github.com/jrasell/sherpa/pkg/policy/backend/memory"
+	policyMemory "github.com/jrasell/sherpa/pkg/policy/backend/memory"
+	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/jrasell/sherpa/pkg/server/router"
+	stateBackend "github.com/jrasell/sherpa/pkg/state/scale"
+	stateConsul "github.com/jrasell/sherpa/pkg/state/scale/consul"
+	stateMemory "github.com/jrasell/sherpa/pkg/state/scale/memory"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -27,10 +31,13 @@ type HTTPServer struct {
 	cfg    *Config
 	logger zerolog.Logger
 
-	nomad         *api.Client
-	policyBackend backend.PolicyBackend
-	autoScale     *autoscale.AutoScale
-	telemetry     *metrics.InmemSink
+	policyBackend policyBackend.PolicyBackend
+	stateBackend  stateBackend.Backend
+	scaleBackend  scale.Scale
+
+	nomad     *api.Client
+	autoScale *autoscale.AutoScale
+	telemetry *metrics.InmemSink
 
 	http.Server
 	routes *routes
@@ -52,6 +59,8 @@ func (h *HTTPServer) Start() error {
 	if err := h.setup(); err != nil {
 		return err
 	}
+
+	go h.runGarbageCollectionLoop()
 
 	h.handleSignals(context.Background())
 	return nil
@@ -75,7 +84,9 @@ func (h *HTTPServer) setup() error {
 		return errors.Wrap(err, "failed to setup telemetry handler")
 	}
 
-	h.setupPolicyBackend()
+	h.setupStoredBackends()
+
+	h.setupScaler()
 
 	// If the server has been set to enable the internal autoscaler, set this up and start the
 	// process running.
@@ -125,13 +136,15 @@ func (h *HTTPServer) setupTLS() error {
 	return nil
 }
 
-func (h *HTTPServer) setupPolicyBackend() {
+func (h *HTTPServer) setupStoredBackends() {
 	if h.cfg.Server.ConsulStorageBackend {
 		h.logger.Debug().Msg("setting up Consul storage backend")
 		h.policyBackend = consul.NewConsulPolicyBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
+		h.stateBackend = stateConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
 	} else {
 		h.logger.Debug().Msg("setting up in-memory storage backend")
-		h.policyBackend = memory.NewJobScalingPolicies()
+		h.policyBackend = policyMemory.NewJobScalingPolicies()
+		h.stateBackend = stateMemory.NewStateBackend()
 	}
 }
 
@@ -155,14 +168,19 @@ func (h *HTTPServer) setupAutoScaling() error {
 		ScalingThreads:  h.cfg.Server.InternalAutoScalerNumThreads,
 	}
 
-	as, err := autoscale.NewHandler(h.logger, h.nomad, h.policyBackend, autoscaleCfg)
+	as, err := autoscale.NewAutoScaleServer(h.logger, h.nomad, h.policyBackend, h.scaleBackend, autoscaleCfg)
 	if err != nil {
 		return err
 	}
 	h.autoScale = as
+
 	go h.autoScale.Run()
 
 	return nil
+}
+
+func (h *HTTPServer) setupScaler() {
+	h.scaleBackend = scale.NewScaler(h.nomad, h.logger, h.stateBackend, h.cfg.Server.StrictPolicyChecking)
 }
 
 func (h *HTTPServer) setupListener() net.Listener {
