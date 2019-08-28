@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jrasell/sherpa/pkg/state"
+	"github.com/jrasell/sherpa/pkg/state/scale"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,7 +62,7 @@ func Test_MemoryStateBackend(t *testing.T) {
 	assert.Equal(t, expectedStateRead1, actualStateRead1)
 
 	// Generate an event with a time long in the past.
-	eventTime3 := time.Now().UnixNano() - 900000000000
+	eventTime3 := time.Now().UnixNano() - (scale.GarbageCollectionThreshold * 2)
 	event3 := generateTestEvent(eventTime3)
 
 	// Write event3 to our backend state store.
