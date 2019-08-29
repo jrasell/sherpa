@@ -21,7 +21,10 @@ func NewJobScalingPolicies() backend.PolicyBackend {
 }
 
 func (p *PolicyBackend) GetPolicies() (map[string]map[string]*policy.GroupScalingPolicy, error) {
-	return p.policies, nil
+	p.RLock()
+	val := p.policies
+	p.RUnlock()
+	return val, nil
 }
 
 func (p *PolicyBackend) GetJobPolicy(job string) (map[string]*policy.GroupScalingPolicy, error) {
