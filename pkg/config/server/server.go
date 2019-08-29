@@ -191,7 +191,7 @@ func RegisterConfig(cmd *cobra.Command) {
 			key          = configKeyStorageBackendConsulPath
 			longOpt      = "storage-consul-path"
 			defaultValue = configKeyStorageBackendConsulPathDefault
-			description  = "The Consul KV path that will be used to store policies"
+			description  = "The Consul KV base path that will be used to store policies and state"
 		)
 
 		flags.String(longOpt, defaultValue, description)
