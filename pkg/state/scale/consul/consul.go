@@ -17,6 +17,12 @@ import (
 
 var _ scale.Backend = (*StateBackend)(nil)
 
+const (
+	baseKVPath         = "state/"
+	eventsKVPath       = "state/events/"
+	latestEventsKVPath = "state/latest-events/"
+)
+
 type StateBackend struct {
 	basePath         string
 	eventsPath       string
@@ -31,9 +37,9 @@ func NewStateBackend(log zerolog.Logger, path string) scale.Backend {
 	consul, _ := client.NewConsulClient()
 
 	return &StateBackend{
-		basePath:         path + "state/",
-		eventsPath:       path + "state/" + "events/",
-		latestEventsPath: path + "state/" + "latest-events/",
+		basePath:         path + baseKVPath,
+		eventsPath:       path + eventsKVPath,
+		latestEventsPath: path + latestEventsKVPath,
 		gcThreshold:      scale.GarbageCollectionThreshold,
 		logger:           log,
 		kv:               consul.KV(),

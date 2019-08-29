@@ -14,6 +14,10 @@ import (
 
 var _ backend.PolicyBackend = (*PolicyBackend)(nil)
 
+const (
+	baseKVPath = "policies/"
+)
+
 type PolicyBackend struct {
 	path   string
 	logger zerolog.Logger
@@ -25,7 +29,7 @@ func NewConsulPolicyBackend(log zerolog.Logger, path string) backend.PolicyBacke
 	consul, _ := client.NewConsulClient()
 
 	return &PolicyBackend{
-		path:   path + "policies/",
+		path:   path + baseKVPath,
 		logger: log,
 		kv:     consul.KV(),
 	}
