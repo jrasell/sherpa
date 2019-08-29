@@ -1,7 +1,11 @@
 ## 0.1.0 (Unreleased)
 
+__BACKWARDS INCOMPATIBILITIES:__
+ * The server `--storage-consul-path` CLI flag now defaults to `sherpa/` to accomodate policies and state. Setups using the previous default will not be impacted as the policies path appends `policies/`.
+
 IMPROVEMENTS:
  * Use a goroutine pool within autoscaler to limit the number of concurrently running autoscaling threads [[GH-24]](https://github.com/jrasell/sherpa/pull/24)
+ * Sherpa stores scaling event details within internal state and is viewable via the API and CLI [[GH-28]](https://github.com/jrasell/sherpa/pull/28) 
 
 BUG FIXES:
  * Use mutex read lock when reading out all policies from memory backend to remove possible race [[GH-30]](https://github.com/jrasell/sherpa/pull/30)
