@@ -11,7 +11,7 @@ import (
 )
 
 func TestScaler_getNewGroupCount(t *testing.T) {
-	scaler := NewScaler(nil, zerolog.Logger{}, false)
+	scaler := NewScaler(nil, zerolog.Logger{}, nil, false)
 
 	testCases := []struct {
 		taskGroup      *api.TaskGroup
@@ -37,7 +37,7 @@ func TestScaler_getNewGroupCount(t *testing.T) {
 }
 
 func TestScaler_checkNewGroupCount(t *testing.T) {
-	scaler := NewScaler(nil, zerolog.Logger{}, true)
+	scaler := NewScaler(nil, zerolog.Logger{}, nil, true)
 
 	testCases := []struct {
 		newCount       int
@@ -97,7 +97,7 @@ func TestScaler_checkNewGroupCount(t *testing.T) {
 }
 
 func TestScaler_jobGroupExists(t *testing.T) {
-	scaler := NewScaler(nil, zerolog.Logger{}, false)
+	scaler := NewScaler(nil, zerolog.Logger{}, nil, false)
 
 	testCases := []struct {
 		job            *api.Job

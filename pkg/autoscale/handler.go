@@ -5,7 +5,7 @@ import (
 
 	nomad "github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/policy"
-	"github.com/jrasell/sherpa/pkg/policy/backend"
+	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/panjf2000/ants"
 	"github.com/rs/zerolog"
@@ -17,13 +17,9 @@ type AutoScale struct {
 	nomad  *nomad.Client
 	scaler scale.Scale
 
-	policyBackend backend.PolicyBackend
+	policyBackend policyBackend.PolicyBackend
 	pool          *ants.PoolWithFunc
-	state         *state
-}
-
-type state struct {
-	inProgress bool
+	inProgress    bool
 }
 
 type scalableResources struct {
@@ -36,14 +32,13 @@ type workerPayload struct {
 	policy map[string]*policy.GroupScalingPolicy
 }
 
-func NewHandler(l zerolog.Logger, n *nomad.Client, p backend.PolicyBackend, cfg *Config) (*AutoScale, error) {
+func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p policyBackend.PolicyBackend, s scale.Scale, cfg *Config) (*AutoScale, error) {
 	as := AutoScale{
 		cfg:           cfg,
 		logger:        l,
 		nomad:         n,
 		policyBackend: p,
-		scaler:        scale.NewScaler(n, l, cfg.StrictChecking),
-		state:         &state{},
+		scaler:        s,
 	}
 
 	pool, err := as.createWorkerPool()
@@ -69,7 +64,7 @@ func (a *AutoScale) Run() {
 			// Check whether a previous scaling loop is in progress, and if it is we should skip
 			// this round. This avoids putting more pressure on a system which may be under load
 			// causing slow API responses.
-			if a.state.inProgress {
+			if a.inProgress {
 				a.logger.Info().Msg("scaling run in progress, skipping new assessment")
 				break
 			}
@@ -101,11 +96,11 @@ func (a *AutoScale) Run() {
 }
 
 func (a AutoScale) setScalingInProgressTrue() {
-	a.state.inProgress = true
+	a.inProgress = true
 }
 
 func (a *AutoScale) setScalingInProgressFalse() {
-	a.state.inProgress = false
+	a.inProgress = false
 }
 
 // createWorkerPool is responsible for building the ants goroutine worker pool with the number of

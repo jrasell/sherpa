@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
-	"github.com/ryanuber/columnize"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -47,11 +47,5 @@ func runInfo(_ *cobra.Command, _ []string) {
 	out = append(out, fmt.Sprintf("%s|%v", "Internal AutoScaling Engine", info.InternalAutoScalingEngine))
 	out = append(out, fmt.Sprintf("%s|%v", "Strict Policy Checking", info.StrictPolicyChecking))
 
-	fmt.Println(formatList(out))
-}
-
-func formatList(in []string) string {
-	columnConf := columnize.DefaultConfig()
-	columnConf.Empty = "<none>"
-	return columnize.Format(in, columnConf)
+	fmt.Println(helper.FormatList(out))
 }

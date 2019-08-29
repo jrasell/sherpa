@@ -21,7 +21,7 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 
 	// Setup our route servers with their required configuration.
 	h.routes.System = systemV1.NewSystemServer(h.logger, h.nomad, h.cfg.Server, h.telemetry)
-	h.routes.Scale = scaleV1.NewScaleServer(h.logger, h.cfg.Server.StrictPolicyChecking, h.policyBackend, h.nomad)
+	h.routes.Scale = scaleV1.NewScaleServer(h.logger, h.cfg.Server.StrictPolicyChecking, h.policyBackend, h.stateBackend, h.nomad)
 	h.routes.Policy = policyV1.NewPolicyServer(h.logger, h.policyBackend)
 
 	systemRoutes := router.Routes{
@@ -57,6 +57,19 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 			Method:  http.MethodPut,
 			Pattern: routeScaleInJobGroupPattern,
 			Handler: h.routes.Scale.InJobGroup,
+		},
+		router.Route{
+			Name:    routeGetScalingStatusName,
+			Method:  http.MethodGet,
+			Pattern: routeGetScalingStatusPattern,
+			Handler: h.routes.Scale.StatusList,
+		},
+
+		router.Route{
+			Name:    routeGetScalingInfoName,
+			Method:  http.MethodGet,
+			Pattern: routeGetScalingInfoPattern,
+			Handler: h.routes.Scale.StatusInfo,
 		},
 	}
 

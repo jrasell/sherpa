@@ -6,6 +6,7 @@ import (
 
 	"github.com/jrasell/sherpa/cmd/scale/in"
 	"github.com/jrasell/sherpa/cmd/scale/out"
+	"github.com/jrasell/sherpa/cmd/scale/status"
 	scaleCfg "github.com/jrasell/sherpa/pkg/config/scale"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ import (
 func RegisterCommand(rootCmd *cobra.Command) error {
 	cmd := &cobra.Command{
 		Use:   "scale",
-		Short: "Perform scaling actions against a Nomad job",
+		Short: "Perform scaling actions against a Nomad job and check scaling status",
 		Run: func(cmd *cobra.Command, args []string) {
 			runScale(cmd, args)
 		},
@@ -36,6 +37,10 @@ func runScale(cmd *cobra.Command, _ []string) {
 
 func registerCommands(cmd *cobra.Command) error {
 	if err := in.RegisterCommand(cmd); err != nil {
+		return err
+	}
+
+	if err := status.RegisterCommand(cmd); err != nil {
 		return err
 	}
 

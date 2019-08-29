@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/armon/go-metrics v0.0.0-20190430140413-ec5e00d3c878
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/mux v1.7.1
 	github.com/hashicorp/consul/api v1.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.1

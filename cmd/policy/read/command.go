@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
-	"github.com/ryanuber/columnize"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -67,11 +67,5 @@ func runRead(_ *cobra.Command, args []string) {
 		out = append(out, fmt.Sprintf("%s|%v|%v|%v|%v|%v",
 			group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.ScaleInCount, pol.ScaleOutCount))
 	}
-	fmt.Println(formatList(out))
-}
-
-func formatList(in []string) string {
-	columnConf := columnize.DefaultConfig()
-	columnConf.Empty = "<none>"
-	return columnize.Format(in, columnConf)
+	fmt.Println(helper.FormatList(out))
 }
