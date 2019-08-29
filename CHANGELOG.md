@@ -1,7 +1,10 @@
 ## 0.1.0 (Unreleased)
 
 IMPROVEMENTS:
-* Use a goroutine pool within autoscaler to limit the number of concurrently running autoscaling threads [[GH-24]](https://github.com/jrasell/sherpa/pull/24)
+ * Use a goroutine pool within autoscaler to limit the number of concurrently running autoscaling threads [[GH-24]](https://github.com/jrasell/sherpa/pull/24)
+
+BUG FIXES:
+ * Use mutex read lock when reading out all policies from memory backend to remove possible race [[GH-30]](https://github.com/jrasell/sherpa/pull/30)
 
 ## 0.0.2 (9 August, 2019)
 
