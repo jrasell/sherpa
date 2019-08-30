@@ -129,7 +129,7 @@ func (s StateBackend) PutScalingEvent(job string, event *state.ScalingEventMessa
 
 	// Write the new event to the latest store.
 	lePair := &api.KVPair{
-		Key:   fmt.Sprintf("%s%s/%s:%s", s.latestEventsPath, event.ID.String(), job, event.GroupName),
+		Key:   fmt.Sprintf("%s%s:%s", s.latestEventsPath, job, event.GroupName),
 		Value: marshal,
 	}
 	_, err = s.kv.Put(lePair, nil)
