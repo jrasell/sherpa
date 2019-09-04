@@ -23,6 +23,8 @@ const (
 	configKeyPolicyEngineStrictCheckingEnabled = "policy-engine-strict-checking-enabled"
 	configKeyStorageBackendConsulEnabled       = "storage-consul-enabled"
 	configKeyStorageBackendConsulPath          = "storage-consul-path"
+
+	configKeyUI = "ui"
 )
 
 type Config struct {
@@ -34,6 +36,7 @@ type Config struct {
 	StrictPolicyChecking         bool
 	InternalAutoScaler           bool
 	ConsulStorageBackend         bool
+	UI                           bool
 	InternalAutoScalerEvalPeriod int
 	InternalAutoScalerNumThreads int
 }
@@ -48,7 +51,8 @@ func (c *Config) MarshalZerologObject(e *zerolog.Event) {
 		Int(configKeyAutoscalerEvaluationInterval, c.InternalAutoScalerEvalPeriod).
 		Int(configKeyAutoscalerThreadNumber, c.InternalAutoScalerNumThreads).
 		Bool(configKeyStorageBackendConsulEnabled, c.ConsulStorageBackend).
-		Str(configKeyStorageBackendConsulPath, c.ConsulStorageBackendPath)
+		Str(configKeyStorageBackendConsulPath, c.ConsulStorageBackendPath).
+		Bool(configKeyUI, c.UI)
 }
 
 func GetConfig() Config {
@@ -63,6 +67,7 @@ func GetConfig() Config {
 		InternalAutoScalerNumThreads: viper.GetInt(configKeyAutoscalerThreadNumber),
 		ConsulStorageBackend:         viper.GetBool(configKeyStorageBackendConsulEnabled),
 		ConsulStorageBackendPath:     viper.GetString(configKeyStorageBackendConsulPath),
+		UI:                           viper.GetBool(configKeyUI),
 	}
 }
 
@@ -195,6 +200,19 @@ func RegisterConfig(cmd *cobra.Command) {
 		)
 
 		flags.String(longOpt, defaultValue, description)
+		_ = viper.BindPFlag(key, flags.Lookup(longOpt))
+		viper.SetDefault(key, defaultValue)
+	}
+
+	{
+		const (
+			key          = configKeyUI
+			longOpt      = "ui"
+			defaultValue = false
+			description  = "Run the Sherpa user interface"
+		)
+
+		flags.Bool(longOpt, defaultValue, description)
 		_ = viper.BindPFlag(key, flags.Lookup(longOpt))
 		viper.SetDefault(key, defaultValue)
 	}
