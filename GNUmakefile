@@ -2,8 +2,8 @@ default: lint test build
 
 tools: ## Install the tools used to test and build
 	@echo "==> Installing build tools"
-	go get github.com/ahmetb/govvv
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	GO111MODULE=off go get -u github.com/ahmetb/govvv
+	GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 build: ## Build Sherpa for development purposes
 	@echo "==> Running $@..."
