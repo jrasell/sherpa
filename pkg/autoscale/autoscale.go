@@ -77,7 +77,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 			req := &scale.GroupReq{Direction: scalingDir, Count: count, GroupName: group, GroupScalingPolicy: pol}
 			scaleReq = append(scaleReq, req)
 
-			a.logger.Info().
+			a.logger.Debug().
 				Str("job", jobID).
 				Object("scaling-req", req).
 				Msg("added group scaling request")
