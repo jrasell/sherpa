@@ -10,6 +10,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
  * Use mutex read lock when reading out all policies from memory backend to remove possible race [[GH-30]](https://github.com/jrasell/sherpa/pull/30)
+ * Autoscaler log to debug when it suggests a group should be scaled [[GH-36]](https://github.com/jrasell/sherpa/pull/36)
 
 ## 0.0.2 (9 August, 2019)
 
