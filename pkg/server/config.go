@@ -11,22 +11,25 @@ type Config struct {
 }
 
 const (
-	routeSystemHealthName          = "GetSystemHealth"
-	routeSystemHealthPattern       = "/v1/system/health"
-	routeSystemInfoName            = "GetSystemInfo"
-	routeSystemInfoPattern         = "/v1/system/info"
-	routeScaleOutJobGroupName      = "ScaleOutJobGroup"
-	routeScaleOutJobGroupPattern   = "/v1/scale/out/{job_id}/{group}"
-	routeScaleInJobGroupName       = "ScaleInJobGroup"
-	routeScaleInJobGroupPattern    = "/v1/scale/in/{job_id}/{group}"
-	routeGetJobScalingPoliciesName = "GetJobScalingPolicies"
+	routeUIRedirectName    = "UIRedirect"
+	routeUIRedirectPattern = "/"
+	routeUIName            = "UI"
+	routeUIPattern         = "/ui"
 
 	routeGetScalingStatusPattern = "/v1/scale/status"
 	routeGetScalingStatusName    = "GetScalingStatus"
+	routeGetScalingInfoPattern   = "/v1/scale/status/{id}"
+	routeGetScalingInfoName      = "GetScalingInfo"
 
-	routeGetScalingInfoPattern = "/v1/scale/status/{id}"
-	routeGetScalingInfoName    = "GetScalingInfo"
-
+	routeSystemHealthName                   = "GetSystemHealth"
+	routeSystemHealthPattern                = "/v1/system/health"
+	routeSystemInfoName                     = "GetSystemInfo"
+	routeSystemInfoPattern                  = "/v1/system/info"
+	routeScaleOutJobGroupName               = "ScaleOutJobGroup"
+	routeScaleOutJobGroupPattern            = "/v1/scale/out/{job_id}/{group}"
+	routeScaleInJobGroupName                = "ScaleInJobGroup"
+	routeScaleInJobGroupPattern             = "/v1/scale/in/{job_id}/{group}"
+	routeGetJobScalingPoliciesName          = "GetJobScalingPolicies"
 	routeGetJobScalingPoliciesPattern       = "/v1/policies"
 	routeGetJobScalingPolicyName            = "GetJobScalingPolicy"
 	routeGetJobScalingPolicyPattern         = "/v1/policy/{job_id}"
