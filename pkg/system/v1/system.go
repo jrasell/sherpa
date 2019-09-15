@@ -15,12 +15,12 @@ const (
 	headerKeyContentType       = "Content-Type"
 	headerValueContentTypeJSON = "application/json; charset=utf-8"
 
-	defaultHealthResp          = "{\"status\":\"ok\"}"
-	defaultAPIPolicyResp       = "Sherpa API"
-	defaultMetaPolicyResp      = "Nomad Job Group Meta"
-	defaultDisabledPolicyResp  = "Disabled"
-	defaultPolicyBackend       = "In Memory"
-	defaultPolicyBackendConsul = "Consul"
+	defaultHealthResp           = "{\"status\":\"ok\"}"
+	defaultAPIPolicyResp        = "Sherpa API"
+	defaultMetaPolicyResp       = "Nomad Job Group Meta"
+	defaultDisabledPolicyResp   = "Disabled"
+	defaultStorageBackend       = "In Memory"
+	defaultStorageBackendConsul = "Consul"
 )
 
 type System struct {
@@ -33,7 +33,7 @@ type System struct {
 type SystemInfoResp struct {
 	NomadAddress              string
 	PolicyEngine              string
-	PolicyStorageBackend      string
+	StorageBackend            string
 	InternalAutoScalingEngine bool
 	StrictPolicyChecking      bool
 }
@@ -57,11 +57,11 @@ func (h *System) GetInfo(w http.ResponseWriter, r *http.Request) {
 		StrictPolicyChecking:      h.server.StrictPolicyChecking,
 		InternalAutoScalingEngine: h.server.InternalAutoScaler,
 		PolicyEngine:              defaultDisabledPolicyResp,
-		PolicyStorageBackend:      defaultPolicyBackend,
+		StorageBackend:            defaultStorageBackend,
 	}
 
 	if h.server.ConsulStorageBackend {
-		resp.PolicyStorageBackend = defaultPolicyBackendConsul
+		resp.StorageBackend = defaultStorageBackendConsul
 	}
 
 	if h.server.APIPolicyEngine {
