@@ -15,7 +15,7 @@ import (
 func RegisterCommand(rootCmd *cobra.Command) error {
 	cmd := &cobra.Command{
 		Use:   "in",
-		Short: "Perform scaling in actions on Nomad jobs and groups.",
+		Short: "Perform scaling in actions on Nomad jobs and groups",
 		Run: func(cmd *cobra.Command, args []string) {
 			runIn(cmd, args)
 		},
