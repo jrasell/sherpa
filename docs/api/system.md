@@ -47,7 +47,7 @@ $ curl \
   "InternalAutoScalingEngine": true,
   "NomadAddress": "http://localhost:4646",
   "PolicyEngine": "Sherpa API",
-  "PolicyStorageBackend": "Consul",
+  "StorageBackend": "Consul",
   "StrictPolicyChecking": false
 }
 ```

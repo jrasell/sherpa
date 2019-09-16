@@ -43,7 +43,7 @@ func runInfo(_ *cobra.Command, _ []string) {
 	var out []string
 	out = append(out, fmt.Sprintf("%s|%s", "Nomad Address", info.NomadAddress))
 	out = append(out, fmt.Sprintf("%s|%s", "Policy Engine", info.PolicyEngine))
-	out = append(out, fmt.Sprintf("%s|%s", "Policy Storage Backend", info.PolicyStorageBackend))
+	out = append(out, fmt.Sprintf("%s|%s", "Storage Backend", info.StorageBackend))
 	out = append(out, fmt.Sprintf("%s|%v", "Internal AutoScaling Engine", info.InternalAutoScalingEngine))
 	out = append(out, fmt.Sprintf("%s|%v", "Strict Policy Checking", info.StrictPolicyChecking))
 

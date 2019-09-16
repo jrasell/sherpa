@@ -13,7 +13,7 @@ type HealthResp struct {
 type InfoResp struct {
 	NomadAddress              string
 	PolicyEngine              string
-	PolicyStorageBackend      string
+	StorageBackend            string
 	InternalAutoScalingEngine bool
 	StrictPolicyChecking      bool
 }

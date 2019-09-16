@@ -30,22 +30,22 @@ func TestSystem_GetInfo(t *testing.T) {
 		{
 			systemServerConfig: &server.Config{APIPolicyEngine: true, ConsulStorageBackend: true},
 			expectedRespCode:   200,
-			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Sherpa API\",\"PolicyStorageBackend\":\"Consul\",\"InternalAutoScalingEngine\":false,\"StrictPolicyChecking\":false}",
+			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Sherpa API\",\"StorageBackend\":\"Consul\",\"InternalAutoScalingEngine\":false,\"StrictPolicyChecking\":false}",
 		},
 		{
 			systemServerConfig: &server.Config{NomadMetaPolicyEngine: true},
 			expectedRespCode:   200,
-			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Nomad Job Group Meta\",\"PolicyStorageBackend\":\"In Memory\",\"InternalAutoScalingEngine\":false,\"StrictPolicyChecking\":false}",
+			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Nomad Job Group Meta\",\"StorageBackend\":\"In Memory\",\"InternalAutoScalingEngine\":false,\"StrictPolicyChecking\":false}",
 		},
 		{
 			systemServerConfig: &server.Config{APIPolicyEngine: true, InternalAutoScaler: true},
 			expectedRespCode:   200,
-			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Sherpa API\",\"PolicyStorageBackend\":\"In Memory\",\"InternalAutoScalingEngine\":true,\"StrictPolicyChecking\":false}",
+			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Sherpa API\",\"StorageBackend\":\"In Memory\",\"InternalAutoScalingEngine\":true,\"StrictPolicyChecking\":false}",
 		},
 		{
 			systemServerConfig: &server.Config{},
 			expectedRespCode:   200,
-			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Disabled\",\"PolicyStorageBackend\":\"In Memory\",\"InternalAutoScalingEngine\":false,\"StrictPolicyChecking\":false}",
+			expectedRespBody:   "{\"NomadAddress\":\"http://127.0.0.1:4646\",\"PolicyEngine\":\"Disabled\",\"StorageBackend\":\"In Memory\",\"InternalAutoScalingEngine\":false,\"StrictPolicyChecking\":false}",
 		},
 	}
 
