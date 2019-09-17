@@ -1,4 +1,4 @@
-## 0.1.0 (Unreleased)
+## 0.1.0 (17 September, 2019)
 
 __BACKWARDS INCOMPATIBILITIES:__
  * The server `--storage-consul-path` CLI flag now defaults to `sherpa/` to accomodate policies and state. Setups using the previous default will not be impacted as the policies path appends `policies/`.
