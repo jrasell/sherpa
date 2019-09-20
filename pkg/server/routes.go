@@ -41,7 +41,7 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 		r = append(r, uiRoutes)
 	}
 
-	// TODO (jrasell) move this out of the route setup. I don't know why this is here.
+	// TODO (jrasell) move leaderProtectedHandler out of the route setup. I don't know why this is here.
 	if h.cfg.Server.NomadMetaPolicyEngine {
 		watcher := watcher2.NewMetaWatcher(h.logger, h.nomad, h.policyBackend)
 		go watcher.Run()
@@ -63,16 +63,16 @@ func (h *HTTPServer) setupUIRoutes() []router.Route {
 
 	return router.Routes{
 		router.Route{
-			Name:    routeUIName,
-			Method:  http.MethodGet,
-			Pattern: routeUIPattern,
-			Handler: h.routes.UI.Get,
+			Name:        routeUIName,
+			Method:      http.MethodGet,
+			Pattern:     routeUIPattern,
+			HandlerFunc: h.routes.UI.Get,
 		},
 		router.Route{
-			Name:    routeUIRedirectName,
-			Method:  http.MethodGet,
-			Pattern: routeUIRedirectPattern,
-			Handler: h.routes.UI.Redirect,
+			Name:        routeUIRedirectName,
+			Method:      http.MethodGet,
+			Pattern:     routeUIRedirectPattern,
+			HandlerFunc: h.routes.UI.Redirect,
 		},
 	}
 }
@@ -87,26 +87,26 @@ func (h *HTTPServer) setupScaleRoutes() []router.Route {
 			Name:    routeScaleOutJobGroupName,
 			Method:  http.MethodPut,
 			Pattern: routeScaleOutJobGroupPattern,
-			Handler: h.routes.Scale.OutJobGroup,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.OutJobGroup),
 		},
 		router.Route{
 			Name:    routeScaleInJobGroupName,
 			Method:  http.MethodPut,
 			Pattern: routeScaleInJobGroupPattern,
-			Handler: h.routes.Scale.InJobGroup,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.InJobGroup),
 		},
 		router.Route{
 			Name:    routeGetScalingStatusName,
 			Method:  http.MethodGet,
 			Pattern: routeGetScalingStatusPattern,
-			Handler: h.routes.Scale.StatusList,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.StatusList),
 		},
 
 		router.Route{
 			Name:    routeGetScalingInfoName,
 			Method:  http.MethodGet,
 			Pattern: routeGetScalingInfoPattern,
-			Handler: h.routes.Scale.StatusInfo,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.StatusInfo),
 		},
 	}
 }
@@ -114,26 +114,32 @@ func (h *HTTPServer) setupScaleRoutes() []router.Route {
 func (h *HTTPServer) setupSystemRoutes() []router.Route {
 	h.logger.Debug().Msg("setting up server system routes")
 
-	h.routes.System = systemV1.NewSystemServer(h.logger, h.nomad, h.cfg.Server, h.telemetry)
+	h.routes.System = systemV1.NewSystemServer(h.logger, h.nomad, h.cfg.Server, h.telemetry, h.clusterMember)
 
 	return router.Routes{
 		router.Route{
 			Name:    routeSystemHealthName,
 			Method:  http.MethodGet,
 			Pattern: routeSystemHealthPattern,
-			Handler: h.routes.System.GetHealth,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.System.GetHealth),
 		},
 		router.Route{
 			Name:    routeSystemInfoName,
 			Method:  http.MethodGet,
 			Pattern: routeSystemInfoPattern,
-			Handler: h.routes.System.GetInfo,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.System.GetInfo),
 		},
 		router.Route{
-			Name:    routeGetMetricsName,
-			Method:  http.MethodGet,
-			Pattern: routeGetMetricsPattern,
-			Handler: h.routes.System.GetMetrics,
+			Name:        routeGetMetricsName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetMetricsPattern,
+			HandlerFunc: h.routes.System.GetMetrics,
+		},
+		router.Route{
+			Name:        routeGetSystemLeaderName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetSystemLeaderPattern,
+			HandlerFunc: h.routes.System.GetLeader,
 		},
 	}
 }
@@ -148,19 +154,19 @@ func (h *HTTPServer) setupPolicyRoutes() []router.Route {
 			Name:    routeGetJobScalingPoliciesName,
 			Method:  http.MethodGet,
 			Pattern: routeGetJobScalingPoliciesPattern,
-			Handler: h.routes.Policy.GetJobPolicies,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.GetJobPolicies),
 		},
 		router.Route{
 			Name:    routeGetJobScalingPolicyName,
 			Method:  http.MethodGet,
 			Pattern: routeGetJobScalingPolicyPattern,
-			Handler: h.routes.Policy.GetJobPolicy,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.GetJobPolicy),
 		},
 		router.Route{
 			Name:    routeGetJobGroupScalingPolicyName,
 			Method:  http.MethodGet,
 			Pattern: routeGetJobGroupScalingPolicyPattern,
-			Handler: h.routes.Policy.GetJobGroupPolicy,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.GetJobGroupPolicy),
 		},
 	}
 }
@@ -173,25 +179,25 @@ func (h *HTTPServer) setupAPIPolicyRoutes() []router.Route {
 			Name:    routePostJobScalingPolicyName,
 			Method:  http.MethodPost,
 			Pattern: routePutJobScalingPolicyPattern,
-			Handler: h.routes.Policy.PutJobPolicy,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.PutJobPolicy),
 		},
 		router.Route{
 			Name:    routePostJobGroupScalingPolicyName,
 			Method:  http.MethodPost,
 			Pattern: routePutJobGroupScalingPolicyPattern,
-			Handler: h.routes.Policy.PutJobGroupPolicy,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.PutJobGroupPolicy),
 		},
 		router.Route{
 			Name:    routeDeleteJobGroupScalingPolicyName,
 			Method:  http.MethodDelete,
 			Pattern: routeDeleteJobGroupScalingPolicyPattern,
-			Handler: h.routes.Policy.DeleteJobGroupPolicy,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.DeleteJobGroupPolicy),
 		},
 		router.Route{
 			Name:    routeDeleteJobScalingPolicyName,
 			Method:  http.MethodDelete,
 			Pattern: routeDeleteJobScalingPolicyPattern,
-			Handler: h.routes.Policy.DeleteJobPolicy,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.DeleteJobPolicy),
 		},
 	}
 }

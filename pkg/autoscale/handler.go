@@ -20,6 +20,13 @@ type AutoScale struct {
 	policyBackend policyBackend.PolicyBackend
 	pool          *ants.PoolWithFunc
 	inProgress    bool
+
+	// isRunning is used to track whether the autoscaler loop is being run. This helps determine
+	// whether stop should be called.
+	isRunning bool
+
+	// doneChan is used to stop the autoscaling handler execution.
+	doneChan chan struct{}
 }
 
 type scalableResources struct {
@@ -39,6 +46,7 @@ func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p policyBackend.Polic
 		nomad:         n,
 		policyBackend: p,
 		scaler:        s,
+		doneChan:      make(chan struct{}),
 	}
 
 	pool, err := as.createWorkerPool()
@@ -50,13 +58,19 @@ func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p policyBackend.Polic
 	return &as, nil
 }
 
+// IsRunning is used to determine if the autoscaler loop is running.
+func (a *AutoScale) IsRunning() bool {
+	return a.isRunning
+}
+
 func (a *AutoScale) Run() {
 	a.logger.Info().Msg("starting Sherpa internal auto-scaling engine")
 
+	// Track that the autoscaler is actively running.
+	a.isRunning = true
+
 	t := time.NewTicker(time.Second * time.Duration(a.cfg.ScalingInterval))
 	defer t.Stop()
-
-	defer a.pool.Release()
 
 	for {
 		select {
@@ -85,17 +99,39 @@ func (a *AutoScale) Run() {
 			}
 
 			for job := range allPolicies {
+
+				// The invoke call will block until there is a free thread.
 				if err := a.pool.Invoke(&workerPayload{jobID: job, policy: allPolicies[job]}); err != nil {
 					a.logger.Error().Err(err).Msg("failed to invoke autoscaling worker thread")
 				}
 			}
-
 			a.setScalingInProgressFalse()
+
+		case <-a.doneChan:
+			a.isRunning = false
+			return
 		}
 	}
 }
 
-func (a AutoScale) setScalingInProgressTrue() {
+// Stop is used to gracefully stop the autoscaling workers.
+func (a *AutoScale) Stop() {
+
+	// Inform sub-process to exit.
+	close(a.doneChan)
+
+	for {
+		if !a.isRunning && !a.inProgress {
+			a.pool.Release()
+			a.logger.Info().Msg("successfully drained autoscaler worker pool")
+			return
+		}
+		a.logger.Debug().Msg("autoscaler still has in-flight workers, will continue to check")
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func (a *AutoScale) setScalingInProgressTrue() {
 	a.inProgress = true
 }
 
@@ -110,14 +146,28 @@ func (a *AutoScale) createWorkerPool() (*ants.PoolWithFunc, error) {
 		ants.Options{
 			Capacity:       a.cfg.ScalingThreads,
 			ExpiryDuration: 60 * time.Second,
-			PoolFunc: func(payload interface{}) {
-				req, ok := payload.(*workerPayload)
-				if !ok {
-					a.logger.Error().Msg("autoscaler worker pool received unexpected payload type")
-					return
-				}
-				a.autoscaleJob(req.jobID, req.policy)
-			},
+			PoolFunc:       a.workerPoolFunc(),
 		},
 	)
+}
+
+func (a *AutoScale) workerPoolFunc() func(payload interface{}) {
+	return func(payload interface{}) {
+
+		// If this thread starts after the autoscaler has been asked to shutdown, exit. Otherwise
+		// perform the work.
+		select {
+		case <-a.doneChan:
+			a.logger.Debug().Msg("exiting autoscaling thread as a result of shutdown request")
+			return
+		default:
+		}
+
+		req, ok := payload.(*workerPayload)
+		if !ok {
+			a.logger.Error().Msg("autoscaler worker pool received unexpected payload type")
+			return
+		}
+		a.autoscaleJob(req.jobID, req.policy)
+	}
 }
