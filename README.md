@@ -19,3 +19,9 @@ Please refer to the [documentation](./docs) directory for guides to help with de
 ## Contributing
 
 Contributions to Sherpa are very welcome! Please reach out if you have any questions.
+
+### Contributors
+
+Thanks to everyone who has contributed to this project.
+
+[@jvineet](https://github.com/jvineet) [@josegonzalez](https://github.com/josegonzalez) [@pmcatominey](https://github.com/pmcatominey)
