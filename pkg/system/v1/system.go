@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gofrs/uuid"
-	"github.com/jrasell/sherpa/pkg/server/cluster"
-
 	metrics "github.com/armon/go-metrics"
+	"github.com/gofrs/uuid"
 	"github.com/hashicorp/nomad/api"
 	serverCfg "github.com/jrasell/sherpa/pkg/config/server"
+	"github.com/jrasell/sherpa/pkg/server/cluster"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

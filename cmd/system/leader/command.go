@@ -16,7 +16,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 		Use:   "leader",
 		Short: "Check the HA status and current leader",
 		Run: func(cmd *cobra.Command, args []string) {
-			runInfo(cmd, args)
+			runLeader(cmd, args)
 		},
 	}
 	rootCmd.AddCommand(cmd)
@@ -24,7 +24,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 	return nil
 }
 
-func runInfo(_ *cobra.Command, _ []string) {
+func runLeader(_ *cobra.Command, _ []string) {
 	clientConfig := clientCfg.GetConfig()
 	mergedConfig := api.DefaultConfig(&clientConfig)
 
