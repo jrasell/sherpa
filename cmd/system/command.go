@@ -6,6 +6,7 @@ import (
 
 	"github.com/jrasell/sherpa/cmd/system/health"
 	"github.com/jrasell/sherpa/cmd/system/info"
+	"github.com/jrasell/sherpa/cmd/system/leader"
 	"github.com/jrasell/sherpa/cmd/system/metrics"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
@@ -35,6 +36,10 @@ func runSystem(cmd *cobra.Command, _ []string) {
 
 func registerCommands(rootCmd *cobra.Command) error {
 	if err := info.RegisterCommand(rootCmd); err != nil {
+		return err
+	}
+
+	if err := leader.RegisterCommand(rootCmd); err != nil {
 		return err
 	}
 

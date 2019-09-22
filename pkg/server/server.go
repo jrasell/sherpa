@@ -18,7 +18,11 @@ import (
 	"github.com/jrasell/sherpa/pkg/policy/backend/consul"
 	policyMemory "github.com/jrasell/sherpa/pkg/policy/backend/memory"
 	"github.com/jrasell/sherpa/pkg/scale"
+	"github.com/jrasell/sherpa/pkg/server/cluster"
 	"github.com/jrasell/sherpa/pkg/server/router"
+	clusterBackend "github.com/jrasell/sherpa/pkg/state/cluster"
+	clusterConsul "github.com/jrasell/sherpa/pkg/state/cluster/consul"
+	clusterMemory "github.com/jrasell/sherpa/pkg/state/cluster/memory"
 	stateBackend "github.com/jrasell/sherpa/pkg/state/scale"
 	stateConsul "github.com/jrasell/sherpa/pkg/state/scale/consul"
 	stateMemory "github.com/jrasell/sherpa/pkg/state/scale/memory"
@@ -31,9 +35,12 @@ type HTTPServer struct {
 	cfg    *Config
 	logger zerolog.Logger
 
-	policyBackend policyBackend.PolicyBackend
-	stateBackend  stateBackend.Backend
-	scaleBackend  scale.Scale
+	policyBackend  policyBackend.PolicyBackend
+	stateBackend   stateBackend.Backend
+	scaleBackend   scale.Scale
+	clusterBackend clusterBackend.Backend
+
+	clusterMember *cluster.Member
 
 	nomad     *api.Client
 	autoScale *autoscale.AutoScale
@@ -41,14 +48,23 @@ type HTTPServer struct {
 
 	http.Server
 	routes *routes
+
+	// gcIsRunning is used to track whether this Sherpa server is currently running the garbage
+	// collection loop.
+	gcIsRunning bool
+
+	// stopChan is used to synchronise stopping the HTTP server services and any handlers which it
+	// maintains operationally.
+	stopChan chan struct{}
 }
 
 func New(l zerolog.Logger, cfg *Config) *HTTPServer {
 	return &HTTPServer{
-		addr:   fmt.Sprintf("%s:%d", cfg.Server.Bind, cfg.Server.Port),
-		cfg:    cfg,
-		logger: l,
-		routes: &routes{},
+		addr:     fmt.Sprintf("%s:%d", cfg.Server.Bind, cfg.Server.Port),
+		cfg:      cfg,
+		logger:   l,
+		routes:   &routes{},
+		stopChan: make(chan struct{}),
 	}
 }
 
@@ -60,9 +76,9 @@ func (h *HTTPServer) Start() error {
 		return err
 	}
 
-	go h.runGarbageCollectionLoop()
+	go h.leaderUpdateHandler()
 
-	h.handleSignals(context.Background())
+	h.handleSignals()
 	return nil
 }
 
@@ -71,6 +87,7 @@ func (h *HTTPServer) logServerConfig() {
 		Object("server", h.cfg.Server).
 		Object("tls", h.cfg.TLS).
 		Object("telemetry", h.cfg.Telemetry).
+		Object("cluster", h.cfg.Cluster).
 		Msg("Sherpa server configuration")
 }
 
@@ -88,8 +105,17 @@ func (h *HTTPServer) setup() error {
 
 	h.setupScaler()
 
-	// If the server has been set to enable the internal autoscaler, set this up and start the
-	// process running.
+	mem, err := cluster.NewMember(h.logger, h.clusterBackend, h.addr, h.cfg.Cluster.Addr, h.cfg.Cluster.Name)
+	if err != nil {
+		return err
+	}
+	h.clusterMember = mem
+
+	go h.clusterMember.RunLeadershipLoop()
+
+	// If the server has been set to enable the internal autoscaler, set this up. We should not
+	// start the handler here; it is the responsibility of the leadership update handler to perform
+	// this task.
 	if h.cfg.Server.InternalAutoScaler {
 		if err := h.setupAutoScaling(); err != nil {
 			return errors.Wrap(err, "failed to setup internal autoscaler")
@@ -117,7 +143,7 @@ func (h *HTTPServer) setup() error {
 
 	go func() {
 		err := h.Serve(ln)
-		h.logger.Info().Err(err).Msg("HTTP server has been shutdown")
+		h.logger.Info().Msgf("HTTP server has been shutdown: %v", err)
 	}()
 
 	return nil
@@ -141,10 +167,12 @@ func (h *HTTPServer) setupStoredBackends() {
 		h.logger.Debug().Msg("setting up Consul storage backend")
 		h.policyBackend = consul.NewConsulPolicyBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
 		h.stateBackend = stateConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
+		h.clusterBackend = clusterConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
 	} else {
 		h.logger.Debug().Msg("setting up in-memory storage backend")
 		h.policyBackend = policyMemory.NewJobScalingPolicies()
 		h.stateBackend = stateMemory.NewStateBackend()
+		h.clusterBackend = clusterMemory.NewStateBackend()
 	}
 }
 
@@ -174,8 +202,6 @@ func (h *HTTPServer) setupAutoScaling() error {
 	}
 	h.autoScale = as
 
-	go h.autoScale.Run()
-
 	return nil
 }
 
@@ -201,23 +227,81 @@ func (h *HTTPServer) setupListener() net.Listener {
 	return ln
 }
 
-func (h *HTTPServer) Stop(ctx context.Context) error {
-	h.logger.Info().Msg("gracefully shutting down HTTP server")
-	return h.Shutdown(ctx)
+// leaderUpdateHandler is the server process which monitors for messages from the leadership
+// process. Changes in the leadership status of a Sherpa server means the server will need to start
+// or stop a number of sub-process.
+func (h *HTTPServer) leaderUpdateHandler() {
+	for {
+		select {
+		case <-h.stopChan:
+			h.logger.Info().Msg("shutting down server leader update handler")
+			return
+		case msg := <-h.clusterMember.UpdateChan:
+			h.logger.Debug().Str("leadership-msg", msg.Msg).Msg("server received leader update message")
+			h.handleLeaderUpdateMsg(msg.IsLeader)
+		}
+	}
 }
 
-func (h *HTTPServer) handleSignals(ctx context.Context) {
+// handleLeaderUpdateMsg is responsible for acting on a leadership message and performing the
+// start/stop actions as a result.
+func (h *HTTPServer) handleLeaderUpdateMsg(isLeader bool) {
+	switch isLeader {
+	case true:
+		if h.autoScale != nil && !h.autoScale.IsRunning() {
+			go h.autoScale.Run()
+		}
+		if !h.gcIsRunning {
+			go h.runGarbageCollectionLoop()
+		}
+	default:
+		if h.autoScale != nil && h.autoScale.IsRunning() {
+			h.autoScale.Stop()
+		}
+		if h.gcIsRunning {
+			h.stopChan <- struct{}{}
+		}
+	}
+}
+
+// Stop is used to synchronise the shutdown of background tasks before the server exits.
+func (h *HTTPServer) Stop() error {
+	h.logger.Info().Msg("gracefully shutting down HTTP server and sub-processes")
+
+	// If the autoscaler is running, stop this. It is important that a Sherpa server is given time
+	// to exit cleanly as this call can take a number of seconds to complete while we gracefully
+	// wait for all in-flight worker threads to finish.
+	if h.autoScale != nil && h.autoScale.IsRunning() {
+		h.autoScale.Stop()
+	}
+
+	// Stop the leadership loop and remove any stored leadership information. It is not important
+	// that this happens cleanly, but preferred.
+	h.clusterMember.ClearLeadership()
+
+	// Send a signal to the HTTPServer stopChan instructing sub-process to stop.
+	close(h.stopChan)
+
+	// When calling shutdown, the process will wait for all active connections to finish. This
+	// protects against interrupting scaling events triggered via the API.
+	return h.Shutdown(context.Background())
+}
+
+// handleSignals is responsible for blocking on receiving OS signals, then handling signals as
+// required by the Sherpa server.
+func (h *HTTPServer) handleSignals() {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
-	defer h.Stop(ctx) // nolint:errcheck
 	for {
 		select {
-		case <-ctx.Done():
-			return
 		case sig := <-signalCh:
 			switch sig {
 			case syscall.SIGINT, syscall.SIGTERM:
+				if err := h.Stop(); err != nil {
+					h.logger.Error().Err(err).Msg("failed to cleanly shutdown server and sub-processes")
+				}
+				h.logger.Info().Msg("successfully shutdown server and sub-processes")
 				return
 			default:
 				panic(fmt.Sprintf("unsupported signal: %v", sig))

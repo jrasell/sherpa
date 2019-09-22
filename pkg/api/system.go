@@ -18,6 +18,14 @@ type InfoResp struct {
 	StrictPolicyChecking      bool
 }
 
+// LeaderResp is the response from the Leader API call.
+type LeaderResp struct {
+	IsSelf               bool
+	HAEnabled            bool
+	LeaderAddress        string
+	LeaderClusterAddress string
+}
+
 func (c *Client) System() *System {
 	return &System{client: c}
 }
@@ -43,6 +51,15 @@ func (s *System) Info() (*InfoResp, error) {
 func (s *System) Metrics() (*metrics.MetricsSummary, error) {
 	var resp metrics.MetricsSummary
 	err := s.client.get("/v1/system/metrics", &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (s *System) Leader() (*LeaderResp, error) {
+	var resp LeaderResp
+	err := s.client.get("/v1/system/leader", &resp)
 	if err != nil {
 		return nil, err
 	}

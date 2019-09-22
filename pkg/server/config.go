@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	Cluster   *serverCfg.ClusterConfig
 	Server    *serverCfg.Config
 	TLS       *serverCfg.TLSConfig
 	Telemetry *serverCfg.TelemetryConfig
@@ -21,10 +22,6 @@ const (
 	routeGetScalingInfoPattern   = "/v1/scale/status/{id}"
 	routeGetScalingInfoName      = "GetScalingInfo"
 
-	routeSystemHealthName                   = "GetSystemHealth"
-	routeSystemHealthPattern                = "/v1/system/health"
-	routeSystemInfoName                     = "GetSystemInfo"
-	routeSystemInfoPattern                  = "/v1/system/info"
 	routeScaleOutJobGroupName               = "ScaleOutJobGroup"
 	routeScaleOutJobGroupPattern            = "/v1/scale/out/{job_id}/{group}"
 	routeScaleInJobGroupName                = "ScaleInJobGroup"
@@ -47,4 +44,14 @@ const (
 	routeGetMetricsPattern                  = "/v1/system/metrics"
 
 	telemetryInterval = 10
+)
+
+// System server routes.
+const (
+	routeGetSystemLeaderName    = "GetSystemLeader"
+	routeGetSystemLeaderPattern = "/v1/system/leader"
+	routeSystemHealthName       = "GetSystemHealth"
+	routeSystemHealthPattern    = "/v1/system/health"
+	routeSystemInfoName         = "GetSystemInfo"
+	routeSystemInfoPattern      = "/v1/system/info"
 )

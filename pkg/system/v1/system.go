@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	metrics "github.com/armon/go-metrics"
+	"github.com/gofrs/uuid"
 	"github.com/hashicorp/nomad/api"
 	serverCfg "github.com/jrasell/sherpa/pkg/config/server"
+	"github.com/jrasell/sherpa/pkg/server/cluster"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -25,6 +27,7 @@ const (
 
 type System struct {
 	logger    zerolog.Logger
+	member    *cluster.Member
 	nomad     *api.Client
 	server    *serverCfg.Config
 	telemetry *metrics.InmemSink
@@ -38,9 +41,24 @@ type SystemInfoResp struct {
 	StrictPolicyChecking      bool
 }
 
-func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Config, tel *metrics.InmemSink) *System {
+type SystemStatusResp struct {
+	ClusterName string
+	ClusterID   uuid.UUID
+	HAEnabled   string
+	Version     string
+}
+
+type SystemLeaderResp struct {
+	IsSelf               bool
+	HAEnabled            bool
+	LeaderAddress        string
+	LeaderClusterAddress string
+}
+
+func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Config, tel *metrics.InmemSink, mem *cluster.Member) *System {
 	return &System{
 		logger:    l,
+		member:    mem,
 		nomad:     nomad,
 		server:    server,
 		telemetry: tel,
@@ -48,7 +66,7 @@ func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Conf
 }
 
 func (h *System) GetHealth(w http.ResponseWriter, r *http.Request) {
-	writeJSONResponse(w, []byte(defaultHealthResp), http.StatusOK)
+	writeJSONResponse(w, []byte(defaultHealthResp))
 }
 
 func (h *System) GetInfo(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +97,34 @@ func (h *System) GetInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, out, http.StatusOK)
+	writeJSONResponse(w, out)
+}
+
+func (h *System) GetLeader(w http.ResponseWriter, r *http.Request) {
+
+	// Pull the leadership information from the local member.
+	l, addr, advAddr, err := h.member.Leader()
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to get leadership information")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp := SystemLeaderResp{
+		IsSelf:               l,
+		HAEnabled:            h.member.IsHA(),
+		LeaderAddress:        addr,
+		LeaderClusterAddress: advAddr,
+	}
+
+	out, err := json.Marshal(resp)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to marshal HTTP response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSONResponse(w, out)
 }
 
 func (h *System) GetMetrics(w http.ResponseWriter, r *http.Request) {
@@ -97,12 +142,12 @@ func (h *System) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, out, http.StatusOK)
+	writeJSONResponse(w, out)
 }
 
-func writeJSONResponse(w http.ResponseWriter, bytes []byte, statusCode int) {
+func writeJSONResponse(w http.ResponseWriter, bytes []byte) {
 	w.Header().Set(headerKeyContentType, headerValueContentTypeJSON)
-	w.WriteHeader(statusCode)
+	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(bytes); err != nil {
 		log.Error().Err(err).Msg("failed to write JSON response")
 	}
