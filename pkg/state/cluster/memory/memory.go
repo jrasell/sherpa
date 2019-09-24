@@ -11,16 +11,16 @@ import (
 
 type ClusterBackend struct {
 	leaderInfo  map[uuid.UUID]*state.ClusterMember
-	leaderLock  *sync.RWMutex
+	leaderLock  sync.RWMutex
 	clusterInfo *state.ClusterInfo
-	clusterLock *sync.RWMutex
+	clusterLock sync.RWMutex
 }
 
 type ClusterLock struct {
 	value    string
 	held     bool
 	leaderCh chan struct{}
-	l        *sync.Mutex
+	l        sync.Mutex
 }
 
 func NewStateBackend() cluster.Backend {
@@ -29,7 +29,7 @@ func NewStateBackend() cluster.Backend {
 	}
 }
 
-func (c ClusterBackend) DeleteLeaderEntries(uuid uuid.UUID) {
+func (c *ClusterBackend) DeleteLeaderEntries(uuid uuid.UUID) {
 	c.leaderLock.Lock()
 	defer c.leaderLock.Unlock()
 
@@ -40,7 +40,7 @@ func (c ClusterBackend) DeleteLeaderEntries(uuid uuid.UUID) {
 	}
 }
 
-func (c ClusterBackend) DeleteLeaderEntry(uuid uuid.UUID) error {
+func (c *ClusterBackend) DeleteLeaderEntry(uuid uuid.UUID) error {
 	c.leaderLock.Lock()
 	defer c.leaderLock.Unlock()
 
@@ -50,28 +50,28 @@ func (c ClusterBackend) DeleteLeaderEntry(uuid uuid.UUID) error {
 	return nil
 }
 
-func (c ClusterBackend) GetClusterInfo() (*state.ClusterInfo, error) {
+func (c *ClusterBackend) GetClusterInfo() (*state.ClusterInfo, error) {
 	c.clusterLock.RLock()
 	info := c.clusterInfo
 	c.clusterLock.RUnlock()
 	return info, nil
 }
 
-func (c ClusterBackend) PutClusterInfo(info *state.ClusterInfo) error {
+func (c *ClusterBackend) PutClusterInfo(info *state.ClusterInfo) error {
 	c.clusterLock.Lock()
 	c.clusterInfo = info
 	c.clusterLock.Unlock()
 	return nil
 }
 
-func (c ClusterBackend) PutClusterLeader(leader *state.ClusterMember) error {
+func (c *ClusterBackend) PutClusterLeader(leader *state.ClusterMember) error {
 	c.leaderLock.Lock()
 	c.leaderInfo[leader.ID] = leader
 	c.leaderLock.Unlock()
 	return nil
 }
 
-func (c ClusterBackend) GetClusterLeader(id string) (*state.ClusterMember, error) {
+func (c *ClusterBackend) GetClusterLeader(id string) (*state.ClusterMember, error) {
 	c.leaderLock.RLock()
 	defer c.leaderLock.Unlock()
 
@@ -86,15 +86,15 @@ func (c ClusterBackend) GetClusterLeader(id string) (*state.ClusterMember, error
 	return nil, nil
 }
 
-func (c ClusterBackend) Lock(value string) (cluster.BackendLock, error) {
+func (c *ClusterBackend) Lock(value string) (cluster.BackendLock, error) {
 	return &ClusterLock{value: value}, nil
 }
 
-func (c ClusterBackend) SupportsHA() bool {
+func (c *ClusterBackend) SupportsHA() bool {
 	return false
 }
 
-func (c ClusterLock) Acquire(stopCh <-chan struct{}) (<-chan struct{}, error) {
+func (c *ClusterLock) Acquire(stopCh <-chan struct{}) (<-chan struct{}, error) {
 	c.l.Lock()
 	defer c.l.Unlock()
 	if c.held {
@@ -106,7 +106,7 @@ func (c ClusterLock) Acquire(stopCh <-chan struct{}) (<-chan struct{}, error) {
 	return c.leaderCh, nil
 }
 
-func (c ClusterLock) Release() error {
+func (c *ClusterLock) Release() error {
 	c.l.Lock()
 	defer c.l.Unlock()
 
@@ -120,7 +120,7 @@ func (c ClusterLock) Release() error {
 	return nil
 }
 
-func (c ClusterLock) Value() (bool, string, error) {
+func (c *ClusterLock) Value() (bool, string, error) {
 	c.l.Lock()
 	val := c.value
 	c.l.Unlock()
