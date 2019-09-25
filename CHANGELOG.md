@@ -3,6 +3,9 @@
 IMPROVEMENTS:
  * Sherpa server now performs clustering and leadership locking. The internal autoscaler, policy garbage collector, and API endpoints with the exception of `ui` and `system` are leader protected. The sub-process will not run unless the server is considered the cluster leader. Protected API endpoints called on a non-leader server will respond with a HTTP redirect. [[GH-45]](https://github.com/jrasell/sherpa/pull/45)
 
+BUG FIXES:
+ * Fix a bug where the Consul backend only returned the last group policy for jobs with multiple groups [[GH-51]](https://github.com/jrasell/sherpa/pull/51)
+
 ## 0.1.0 (17 September, 2019)
 
 __BACKWARDS INCOMPATIBILITIES:__
