@@ -5,6 +5,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
  * Fix a bug where the Consul backend only returned the last group policy for jobs with multiple groups [[GH-51]](https://github.com/jrasell/sherpa/pull/51)
+ * The API for writing a policy should accept JobGroupPolicy type rather than a byte array [[GH-52]](https://github.com/jrasell/sherpa/pull/52)
 
 ## 0.1.0 (17 September, 2019)
 
