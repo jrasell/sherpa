@@ -101,6 +101,10 @@ func (p *PolicyBackend) GetJobGroupPolicy(job, group string) (*policy.GroupScali
 		return nil, err
 	}
 
+	if kv == nil {
+		return nil, nil
+	}
+
 	out := &policy.GroupScalingPolicy{}
 
 	if err := json.Unmarshal(kv.Value, out); err != nil {
