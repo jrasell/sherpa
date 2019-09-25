@@ -55,7 +55,14 @@ func (p *PolicyBackend) GetPolicies() (map[string]map[string]*policy.GroupScalin
 		}
 
 		keySplit := strings.Split(kv[i].Key, "/")
-		out[keySplit[len(keySplit)-2]] = map[string]*policy.GroupScalingPolicy{keySplit[len(keySplit)-1]: keyPolicy}
+		jobName := keySplit[len(keySplit)-2]
+		groupName := keySplit[len(keySplit)-1]
+
+		if _, ok := out[jobName]; !ok {
+			out[jobName] = map[string]*policy.GroupScalingPolicy{}
+		}
+
+		out[jobName][groupName] = keyPolicy
 	}
 
 	return out, nil
