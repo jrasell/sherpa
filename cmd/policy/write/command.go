@@ -1,6 +1,7 @@
 package write
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -57,12 +58,24 @@ func runWrite(_ *cobra.Command, args []string) {
 
 	policyConfig := policyCfg.GetConfig()
 	if policyConfig.GroupName != "" {
-		os.Exit(runJobGroupWrite(client, name, policyConfig.GroupName, b))
+		var policy api.JobGroupPolicy
+		if err = json.Unmarshal(b, &policy); err != nil {
+			fmt.Println("Error parsing scaling policy file:", err)
+			os.Exit(sysexits.Software)
+		}
+
+		os.Exit(runJobGroupWrite(client, name, policyConfig.GroupName, &policy))
 	}
-	os.Exit(runJobWrite(client, name, b))
+
+	var policy map[string]*api.JobGroupPolicy
+	if err = json.Unmarshal(b, &policy); err != nil {
+		fmt.Println("Error parsing scaling policy file:", err)
+		os.Exit(sysexits.Software)
+	}
+	os.Exit(runJobWrite(client, name, &policy))
 }
 
-func runJobWrite(c *api.Client, job string, policy []byte) int {
+func runJobWrite(c *api.Client, job string, policy *map[string]*api.JobGroupPolicy) int {
 	if err := c.Policies().WriteJobPolicy(job, policy); err != nil {
 		fmt.Println("Error writing job scaling policy:", err)
 		return sysexits.Software
@@ -72,7 +85,7 @@ func runJobWrite(c *api.Client, job string, policy []byte) int {
 	return sysexits.OK
 }
 
-func runJobGroupWrite(c *api.Client, job, group string, policy []byte) int {
+func runJobGroupWrite(c *api.Client, job, group string, policy *api.JobGroupPolicy) int {
 	if err := c.Policies().WriteJobGroupPolicy(job, group, policy); err != nil {
 		fmt.Println("Error writing job group scaling policy:", err)
 		return sysexits.Software
