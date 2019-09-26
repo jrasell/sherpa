@@ -78,7 +78,7 @@ func (p *Policy) GetJobGroupPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if *gPolicy == (policy.GroupScalingPolicy{}) || gPolicy == nil {
+	if gPolicy == nil || *gPolicy == (policy.GroupScalingPolicy{}) {
 		http.NotFound(w, r)
 		return
 	}
