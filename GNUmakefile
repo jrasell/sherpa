@@ -14,6 +14,10 @@ test: ## Run the Sherpa test suite with coverage
 	@go test ./... -cover -v -tags -race \
 		"$(BUILDTAGS)" $(shell go list ./... | grep -v vendor)
 
+acctest: ## Run the Sherpa acceptance test suite
+	@echo "==> Running $@..."
+	@SHERPA_ACC=1 go test ./test -count 1 -v -mod vendor
+
 release: ## Trigger the release build script
 	@echo "==> Running $@..."
 	@goreleaser --rm-dist
