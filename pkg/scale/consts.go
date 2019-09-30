@@ -12,6 +12,18 @@ type Scale interface {
 	// Trigger performs scaling of 1 or more job groups which belong to the same job.
 	Trigger(string, []*GroupReq, state.Source) (*ScalingResponse, int, error)
 
+	// GetDeploymentChannel is used to return the channel where updates to Nomad deployments should
+	// be sent.
+	GetDeploymentChannel() chan interface{}
+
+	// RunDeploymentUpdateHandler is used to trigger the long running process which handles
+	// messages sent to the deployment update channel.
+	RunDeploymentUpdateHandler()
+
+	// JobGroupIsDeploying checks internal references to identify if the queried job group is
+	// currently in deployment.
+	JobGroupIsDeploying(job, group string) bool
+
 	checkJobGroupExists(*api.Job, string) *api.TaskGroup
 
 	getNewGroupCount(*api.TaskGroup, *GroupReq) int

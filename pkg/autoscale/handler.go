@@ -100,9 +100,23 @@ func (a *AutoScale) Run() {
 
 			for job := range allPolicies {
 
-				// The invoke call will block until there is a free thread.
-				if err := a.pool.Invoke(&workerPayload{jobID: job, policy: allPolicies[job]}); err != nil {
-					a.logger.Error().Err(err).Msg("failed to invoke autoscaling worker thread")
+				// Create a new policy object to track groups that are not considered to be in
+				// deployment.
+				nonDeploying := make(map[string]*policy.GroupScalingPolicy)
+
+				// Iterate the group policies, and check whether they are in deployment or not.
+				for group := range allPolicies[job] {
+					if !a.scaler.JobGroupIsDeploying(job, group) {
+						nonDeploying[group] = allPolicies[job][group]
+					}
+				}
+
+				// If we have groups within the job that are not deploying, we can trigger a
+				// scaling event.
+				if len(nonDeploying) > 0 {
+					if err := a.pool.Invoke(&workerPayload{jobID: job, policy: allPolicies[job]}); err != nil {
+						a.logger.Error().Err(err).Msg("failed to invoke autoscaling worker thread")
+					}
 				}
 			}
 			a.setScalingInProgressFalse()

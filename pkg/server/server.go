@@ -26,6 +26,8 @@ import (
 	stateBackend "github.com/jrasell/sherpa/pkg/state/scale"
 	stateConsul "github.com/jrasell/sherpa/pkg/state/scale/consul"
 	stateMemory "github.com/jrasell/sherpa/pkg/state/scale/memory"
+	"github.com/jrasell/sherpa/pkg/watcher"
+	"github.com/jrasell/sherpa/pkg/watcher/deployment"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -39,6 +41,9 @@ type HTTPServer struct {
 	stateBackend   stateBackend.Backend
 	scaleBackend   scale.Scale
 	clusterBackend clusterBackend.Backend
+
+	// deploymentWatcher is used to watch deployments in order to update internal tracking.
+	deploymentWatcher watcher.Watcher
 
 	clusterMember *cluster.Member
 
@@ -78,6 +83,9 @@ func (h *HTTPServer) Start() error {
 
 	go h.leaderUpdateHandler()
 
+	// Start the deployment watcher, using the scale deployment channel for updates.
+	go h.deploymentWatcher.Run(h.scaleBackend.GetDeploymentChannel())
+
 	h.handleSignals()
 	return nil
 }
@@ -104,6 +112,9 @@ func (h *HTTPServer) setup() error {
 	h.setupStoredBackends()
 
 	h.setupScaler()
+	go h.scaleBackend.RunDeploymentUpdateHandler()
+
+	h.setupDeploymentWatcher()
 
 	mem, err := cluster.NewMember(h.logger, h.clusterBackend, h.addr, h.cfg.Cluster.Addr, h.cfg.Cluster.Name)
 	if err != nil {
@@ -207,6 +218,10 @@ func (h *HTTPServer) setupAutoScaling() error {
 
 func (h *HTTPServer) setupScaler() {
 	h.scaleBackend = scale.NewScaler(h.nomad, h.logger, h.stateBackend, h.cfg.Server.StrictPolicyChecking)
+}
+
+func (h *HTTPServer) setupDeploymentWatcher() {
+	h.deploymentWatcher = deployment.New(h.logger, h.nomad)
 }
 
 func (h *HTTPServer) setupListener() net.Listener {

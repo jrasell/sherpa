@@ -80,7 +80,12 @@ func (h *HTTPServer) setupUIRoutes() []router.Route {
 func (h *HTTPServer) setupScaleRoutes() []router.Route {
 	h.logger.Debug().Msg("setting up server scale routes")
 
-	h.routes.Scale = scaleV1.NewScaleServer(h.logger, h.cfg.Server.StrictPolicyChecking, h.policyBackend, h.stateBackend, h.nomad)
+	h.routes.Scale = scaleV1.NewScaleServer(h.cfg.Server.StrictPolicyChecking, &scaleV1.ScaleConfig{
+		Logger: h.logger,
+		Policy: h.policyBackend,
+		Scale:  h.scaleBackend,
+		State:  h.stateBackend,
+	})
 
 	return router.Routes{
 		router.Route{
