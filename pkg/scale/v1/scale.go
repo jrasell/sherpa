@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/hashicorp/nomad/api"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/jrasell/sherpa/pkg/state"
@@ -22,12 +21,21 @@ type Scale struct {
 	scaler         scale.Scale
 }
 
-func NewScaleServer(l zerolog.Logger, strict bool, backend policyBackend.PolicyBackend, state stateBackend.Backend, c *api.Client) *Scale {
+// ScaleConfig is a convenience for setting up the scale server. These objects are centrally built
+// and passed to the server.
+type ScaleConfig struct {
+	Logger zerolog.Logger
+	Policy policyBackend.PolicyBackend
+	Scale  scale.Scale
+	State  stateBackend.Backend
+}
+
+func NewScaleServer(strict bool, cfg *ScaleConfig) *Scale {
 	return &Scale{
-		logger:         l,
-		scaler:         scale.NewScaler(c, l, state, strict),
-		policyBackend:  backend,
-		stateBackend:   state,
+		logger:         cfg.Logger,
+		scaler:         cfg.Scale,
+		policyBackend:  cfg.Policy,
+		stateBackend:   cfg.State,
 		strictChecking: strict,
 	}
 }
@@ -38,6 +46,15 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := vars["group"]
 
 	newReq := &scale.GroupReq{Direction: scale.DirectionIn, GroupName: groupID}
+
+	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
+		s.logger.Info().
+			Str("job", jobID).
+			Str("group", groupID).
+			Msg("job group is currently in deployment and cannot be scaled")
+		http.Error(w, errJobGroupInDeployment.Error(), http.StatusForbidden)
+		return
+	}
 
 	pol, err := s.policyBackend.GetJobGroupPolicy(jobID, groupID)
 	if err != nil {
@@ -107,6 +124,15 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := vars["group"]
 
 	newReq := &scale.GroupReq{Direction: scale.DirectionOut, GroupName: groupID}
+
+	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
+		s.logger.Info().
+			Str("job", jobID).
+			Str("group", groupID).
+			Msg("job group is currently in deployment and cannot be scaled")
+		http.Error(w, errJobGroupInDeployment.Error(), http.StatusForbidden)
+		return
+	}
 
 	pol, err := s.policyBackend.GetJobGroupPolicy(jobID, groupID)
 	if err != nil {

@@ -3,6 +3,7 @@ package scale
 import (
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/state"
@@ -18,14 +19,22 @@ type Scaler struct {
 	nomadClient *api.Client
 	state       scale.Backend
 	strict      bool
+
+	deployments          map[deploymentsKey]interface{}
+	deploymentsLock      sync.RWMutex
+	deploymentUpdateChan chan interface{}
+
+	shutdownChan chan interface{}
 }
 
 func NewScaler(c *api.Client, l zerolog.Logger, state scale.Backend, strictChecking bool) Scale {
 	return &Scaler{
-		logger:      l,
-		nomadClient: c,
-		state:       state,
-		strict:      strictChecking,
+		logger:               l,
+		nomadClient:          c,
+		state:                state,
+		strict:               strictChecking,
+		deployments:          make(map[deploymentsKey]interface{}),
+		deploymentUpdateChan: make(chan interface{}),
 	}
 }
 

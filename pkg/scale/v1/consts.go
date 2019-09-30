@@ -19,4 +19,5 @@ const (
 var (
 	errInternalScaleOutNoPolicy = errors.New("scale out forbidden, no scaling policy found")
 	errInternalScaleInNoPolicy  = errors.New("scale in forbidden, no scaling policy found")
+	errJobGroupInDeployment     = errors.New("scale forbidden, job group currently deploying")
 )
