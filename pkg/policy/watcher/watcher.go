@@ -28,7 +28,7 @@ func (m *MetaWatcher) Run() {
 
 	var maxFound uint64
 
-	q := &api.QueryOptions{WaitTime: 5 * time.Minute}
+	q := &api.QueryOptions{WaitTime: 5 * time.Minute, WaitIndex: 1}
 
 	for {
 
