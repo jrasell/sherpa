@@ -10,13 +10,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	metrics "github.com/armon/go-metrics"
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale"
 	"github.com/jrasell/sherpa/pkg/client"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/policy/backend/consul"
 	policyMemory "github.com/jrasell/sherpa/pkg/policy/backend/memory"
+	"github.com/jrasell/sherpa/pkg/policy/backend/nomadmeta"
 	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/jrasell/sherpa/pkg/server/cluster"
 	"github.com/jrasell/sherpa/pkg/server/router"
@@ -28,6 +29,7 @@ import (
 	stateMemory "github.com/jrasell/sherpa/pkg/state/scale/memory"
 	"github.com/jrasell/sherpa/pkg/watcher"
 	"github.com/jrasell/sherpa/pkg/watcher/deployment"
+	"github.com/jrasell/sherpa/pkg/watcher/job"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -44,6 +46,14 @@ type HTTPServer struct {
 
 	// deploymentWatcher is used to watch deployments in order to update internal tracking.
 	deploymentWatcher watcher.Watcher
+
+	// nomadMetaWatcher is used to watch Nomad jobs in order to update policies based off the Nomad
+	// meta stanzas.
+	nomadMetaWatcher watcher.Watcher
+
+	// nomadMetaProcessor is the processor which is used to handle job updates and decide if their
+	// scaling meta policy has changed and should be reflected in storage.
+	nomadMetaProcessor *nomadmeta.Processor
 
 	clusterMember *cluster.Member
 
@@ -85,6 +95,13 @@ func (h *HTTPServer) Start() error {
 
 	// Start the deployment watcher, using the scale deployment channel for updates.
 	go h.deploymentWatcher.Run(h.scaleBackend.GetDeploymentChannel())
+
+	// If the operator has configured the Nomad meta policy engine, we should start the processes
+	// which watch and handle updates.
+	if h.cfg.Server.NomadMetaPolicyEngine && h.nomadMetaWatcher != nil {
+		go h.nomadMetaProcessor.Run()
+		go h.nomadMetaWatcher.Run(h.nomadMetaProcessor.GetUpdateChannel())
+	}
 
 	h.handleSignals()
 	return nil
@@ -174,17 +191,34 @@ func (h *HTTPServer) setupTLS() error {
 }
 
 func (h *HTTPServer) setupStoredBackends() {
+
+	// Setup the standard backends based on the operators storage type.
 	if h.cfg.Server.ConsulStorageBackend {
 		h.logger.Debug().Msg("setting up Consul storage backend")
-		h.policyBackend = consul.NewConsulPolicyBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
 		h.stateBackend = stateConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
 		h.clusterBackend = clusterConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
 	} else {
 		h.logger.Debug().Msg("setting up in-memory storage backend")
-		h.policyBackend = policyMemory.NewJobScalingPolicies()
 		h.stateBackend = stateMemory.NewStateBackend()
 		h.clusterBackend = clusterMemory.NewStateBackend()
 	}
+	h.setupPolicyBackend()
+}
+
+func (h *HTTPServer) setupPolicyBackend() {
+	h.logger.Debug().Msg("setting up policy backend")
+
+	if h.cfg.Server.NomadMetaPolicyEngine {
+		h.nomadMetaWatcher = job.NewWatcher(h.logger, h.nomad)
+		h.policyBackend, h.nomadMetaProcessor = nomadmeta.NewJobScalingPolicies(h.logger, h.nomad)
+		return
+	}
+
+	if h.cfg.Server.ConsulStorageBackend {
+		h.policyBackend = consul.NewConsulPolicyBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
+		return
+	}
+	h.policyBackend = policyMemory.NewJobScalingPolicies()
 }
 
 func (h *HTTPServer) setupNomadClient() error {

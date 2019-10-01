@@ -1,4 +1,4 @@
-package watcher
+package nomadmeta
 
 const (
 	metaKeyEnabled                           = "sherpa_enabled"
