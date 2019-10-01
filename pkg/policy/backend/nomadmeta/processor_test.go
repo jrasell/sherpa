@@ -1,4 +1,4 @@
-package watcher
+package nomadmeta
 
 import (
 	"testing"
@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMetaWatcher_policyFromMeta(t *testing.T) {
-	watcher := NewMetaWatcher(zerolog.Logger{}, nil, nil)
+func TestProcessor_policyFromMeta(t *testing.T) {
+	_, p := NewJobScalingPolicies(zerolog.Logger{}, nil)
 
 	testCases := []struct {
 		meta           map[string]string
@@ -121,7 +121,7 @@ func TestMetaWatcher_policyFromMeta(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actualPolicy := watcher.policyFromMeta(tc.meta)
+		actualPolicy := p.policyFromMeta(tc.meta)
 		assert.Equal(t, tc.expectedPolicy, actualPolicy)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	policyV1 "github.com/jrasell/sherpa/pkg/policy/v1"
-	watcher2 "github.com/jrasell/sherpa/pkg/policy/watcher"
 	scaleV1 "github.com/jrasell/sherpa/pkg/scale/v1"
 	v1 "github.com/jrasell/sherpa/pkg/server/endpoints/v1"
 	"github.com/jrasell/sherpa/pkg/server/router"
@@ -39,12 +38,6 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 	if h.cfg.Server.UI {
 		uiRoutes := h.setupUIRoutes()
 		r = append(r, uiRoutes)
-	}
-
-	// TODO (jrasell) move leaderProtectedHandler out of the route setup. I don't know why this is here.
-	if h.cfg.Server.NomadMetaPolicyEngine {
-		watcher := watcher2.NewMetaWatcher(h.logger, h.nomad, h.policyBackend)
-		go watcher.Run()
 	}
 
 	// Setup the policy engine API route if it is enabled.

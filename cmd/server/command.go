@@ -68,10 +68,5 @@ func verifyServerConfig(cfg serverCfg.Config) error {
 	if cfg.NomadMetaPolicyEngine && cfg.APIPolicyEngine {
 		return errors.New("Please only enable one policy engine")
 	}
-
-	if cfg.NomadMetaPolicyEngine && cfg.ConsulStorageBackend {
-		return errors.New("Consul storage backend is not compatible with Nomad meta policy engine")
-	}
-
 	return nil
 }
