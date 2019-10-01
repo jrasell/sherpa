@@ -16,8 +16,8 @@ type TestCase struct {
 	// Steps are ran in order stopping on failure
 	Steps []TestStep
 
-	// CleanupFunc is called at the end of the TestCase if set
-	CleanupFunc TestStateFunc
+	// CleanupFuncs is called at the end of the TestCase if set
+	CleanupFuncs []TestStateFunc
 }
 
 // TestStep is a single step within a TestCase
@@ -110,8 +110,8 @@ func Test(t *testing.T, c TestCase) {
 		}
 	}
 
-	if c.CleanupFunc != nil {
-		err = c.CleanupFunc(state)
+	for i := range c.CleanupFuncs {
+		err = c.CleanupFuncs[i](state)
 		if err != nil {
 			t.Errorf("cleanup failed: %s", err)
 		}

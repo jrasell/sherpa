@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/jrasell/sherpa/pkg/api"
@@ -9,6 +10,10 @@ import (
 )
 
 func TestPolicy_list(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
 	acctest.Test(t, acctest.TestCase{
 		Steps: []acctest.TestStep{
 			{
@@ -51,11 +56,15 @@ func TestPolicy_list(t *testing.T) {
 				},
 			},
 		},
-		CleanupFunc: acctest.CleanupSherpaPolicy,
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy},
 	})
 }
 
 func TestPolicy_readJob(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
 	groupName := "group"
 
 	acctest.Test(t, acctest.TestCase{
@@ -93,11 +102,15 @@ func TestPolicy_readJob(t *testing.T) {
 				},
 			},
 		},
-		CleanupFunc: acctest.CleanupSherpaPolicy,
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy},
 	})
 }
 
 func TestPolicy_readJobGroup(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
 	groupName := "group"
 
 	acctest.Test(t, acctest.TestCase{
@@ -134,11 +147,15 @@ func TestPolicy_readJobGroup(t *testing.T) {
 				},
 			},
 		},
-		CleanupFunc: acctest.CleanupSherpaPolicy,
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy},
 	})
 }
 
 func TestPolicy_write(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
 	groupName := "group"
 
 	acctest.Test(t, acctest.TestCase{
@@ -198,11 +215,15 @@ func TestPolicy_write(t *testing.T) {
 				},
 			},
 		},
-		CleanupFunc: acctest.CleanupSherpaPolicy,
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy},
 	})
 }
 
 func TestPolicy_deleteJobPolicy(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
 	groupName := "group"
 
 	acctest.Test(t, acctest.TestCase{
@@ -252,11 +273,15 @@ func TestPolicy_deleteJobPolicy(t *testing.T) {
 				CheckErr:  acctest.CheckErrEqual("unexpected response code 404: 404 page not found"),
 			},
 		},
-		CleanupFunc: acctest.CleanupSherpaPolicy,
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy},
 	})
 }
 
 func TestPolicy_deleteJobGroupPolicy(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
 	acctest.Test(t, acctest.TestCase{
 		Steps: []acctest.TestStep{
 			{
@@ -326,6 +351,6 @@ func TestPolicy_deleteJobGroupPolicy(t *testing.T) {
 				},
 			},
 		},
-		CleanupFunc: acctest.CleanupSherpaPolicy,
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy},
 	})
 }
