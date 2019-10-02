@@ -60,9 +60,16 @@ func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq, source state.Sourc
 	var changes bool
 
 	if s.strict {
-		changes = s.triggerWithStrictChecking(job, groupReqs)
+		changes, err = s.triggerWithStrictChecking(job, groupReqs)
 	} else {
-		changes = s.triggerWithoutStrictChecking(job, groupReqs)
+		changes, err = s.triggerWithoutStrictChecking(job, groupReqs)
+	}
+
+	// The error returned is always an indication of a validation check. It will contain the
+	// relevant information for the client to resolve the issue and uses 409 to avoid confusion
+	// with the standard 403 use with auth.
+	if err != nil {
+		return nil, http.StatusConflict, err
 	}
 
 	// If no job changes have been processed, inform the client as such. There are a number of
@@ -93,7 +100,7 @@ func (s *Scaler) handleEndState(job string, apiResp *api.JobRegisterResponse, ap
 	return &ScalingResponse{ID: scaleID, EvaluationID: eval}, http.StatusOK, nil
 }
 
-func (s *Scaler) triggerWithStrictChecking(job *api.Job, groupReqs []*GroupReq) bool {
+func (s *Scaler) triggerWithStrictChecking(job *api.Job, groupReqs []*GroupReq) (bool, error) {
 	var changes bool
 
 	for i := range groupReqs {
@@ -104,14 +111,14 @@ func (s *Scaler) triggerWithStrictChecking(job *api.Job, groupReqs []*GroupReq) 
 				Str("job", *job.ID).
 				Str("group", groupReqs[i].GroupName).
 				Msg("job group scaling policy is disabled")
-			break
+			return changes, errors.New("job group scaling policy is currently disabled")
 		}
 
 		// Check that the running job on the Nomad cluster has the job group and grab this. The
 		// func loops so we might as well grab the group out here and save more loops.
 		tg := s.checkJobGroupExists(job, groupReqs[i].GroupName)
 		if tg == nil {
-			break
+			return changes, errors.New("job group not found on Nomad cluster")
 		}
 
 		// Important: when dealing with a Nomad job we are dealing with a pointer. In strict
@@ -124,7 +131,7 @@ func (s *Scaler) triggerWithStrictChecking(job *api.Job, groupReqs []*GroupReq) 
 				Str("job", *job.ID).
 				Str("group", groupReqs[i].GroupName).
 				Msg(err.Error())
-			break
+			return changes, err
 		}
 
 		// Once the check is completed, update the job group count and ensure changes are marked as
@@ -133,16 +140,16 @@ func (s *Scaler) triggerWithStrictChecking(job *api.Job, groupReqs []*GroupReq) 
 		changes = true
 	}
 
-	return changes
+	return changes, nil
 }
 
-func (s *Scaler) triggerWithoutStrictChecking(job *api.Job, groupReqs []*GroupReq) bool {
+func (s *Scaler) triggerWithoutStrictChecking(job *api.Job, groupReqs []*GroupReq) (bool, error) {
 	var changes bool
 
 	for i := range groupReqs {
 		tg := s.checkJobGroupExists(job, groupReqs[i].GroupName)
 		if tg == nil {
-			break
+			return changes, errors.New("job group not found on Nomad cluster")
 		}
 
 		// Once we have confirmed the job group exists within the running Nomad job, we can assume
@@ -153,7 +160,7 @@ func (s *Scaler) triggerWithoutStrictChecking(job *api.Job, groupReqs []*GroupRe
 		*tg.Count = s.getNewGroupCount(tg, groupReqs[i])
 	}
 
-	return changes
+	return changes, nil
 }
 
 func (s *Scaler) getNewGroupCount(taskGroup *api.TaskGroup, req *GroupReq) int {

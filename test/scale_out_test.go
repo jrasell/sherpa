@@ -125,7 +125,64 @@ func TestScaleOut_singleTaskGroupCountSetTooHigh(t *testing.T) {
 					return nil
 				},
 				ExpectErr: true,
-				CheckErr:  acctest.CheckErrEqual("unexpected response code 304:"),
+				CheckErr:  acctest.CheckErrEqual("unexpected response code 409: scaling action will break job group maximum threshold"),
+			},
+			{
+				Runner: acctest.CheckTaskGroupCount(testScaleOutGroupName1, 1),
+			},
+		},
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy, acctest.CleanupPurgeJob},
+	})
+}
+
+func TestScaleOut_singleTaskGroupPolicyDisabled(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
+	acctest.Test(t, acctest.TestCase{
+		Steps: []acctest.TestStep{
+			{
+				Runner: func(s *acctest.TestState) error {
+					policy := &api.JobGroupPolicy{Enabled: false, MaxCount: 2, MinCount: 1}
+					return s.Sherpa.Policies().WriteJobGroupPolicy(s.JobName, testScaleOutGroupName1, policy)
+				},
+			},
+			{
+				Runner: func(s *acctest.TestState) error {
+					policy1, err := s.Sherpa.Policies().ReadJobGroupPolicy(s.JobName, testScaleOutGroupName1)
+					if err != nil {
+						return err
+					}
+
+					if policy1.MaxCount != 2 {
+						return fmt.Errorf("expected policy %s/%s to match the MaxCount", s.JobName, testMetaGroupName1)
+					}
+					if policy1.MinCount != 1 {
+						return fmt.Errorf("expected policy %s/%s to match the MinCount", s.JobName, testMetaGroupName1)
+					}
+					return nil
+				},
+			},
+			{
+				Runner: func(s *acctest.TestState) error {
+					_, _, err := s.Nomad.Jobs().Register(buildScaleOutTestJob(s.JobName), nil)
+					if err != nil {
+						return err
+					}
+					return acctest.CheckJobReachesStatus(s, "running")
+				},
+			},
+			{
+				Runner: func(s *acctest.TestState) error {
+					_, err := s.Sherpa.Scale().JobGroupIn(s.JobName, testScaleOutGroupName1, 10)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+				ExpectErr: true,
+				CheckErr:  acctest.CheckErrEqual("unexpected response code 409: job group scaling policy is currently disabled"),
 			},
 			{
 				Runner: acctest.CheckTaskGroupCount(testScaleOutGroupName1, 1),
