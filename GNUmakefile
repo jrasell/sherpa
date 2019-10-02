@@ -1,4 +1,4 @@
-default: lint test build
+default: lint tests build
 
 tools: ## Install the tools used to test and build
 	@echo "==> Installing build tools"
@@ -9,7 +9,7 @@ build: ## Build Sherpa for development purposes
 	@echo "==> Running $@..."
 	govvv build -o sherpa ./cmd -version $(shell git describe --tags --abbrev=0 $(git rev-list --tags --max-count=1) |cut -c 2- |awk '{print $1}')+dev -pkg github.com/jrasell/sherpa/pkg/build
 
-test: ## Run the Sherpa test suite with coverage
+tests: ## Run the Sherpa test suite with coverage
 	@echo "==> Running $@..."
 	@go test ./... -cover -v -tags -race \
 		"$(BUILDTAGS)" $(shell go list ./... | grep -v vendor)
