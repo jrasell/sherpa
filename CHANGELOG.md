@@ -10,6 +10,7 @@ BUG FIXES:
  * The API for writing a policy should accept JobGroupPolicy type rather than a byte array [[GH-52]](https://github.com/jrasell/sherpa/pull/52)
  * Fix panic when attempting to read a policy by job and group name which doesn't exist in the Consul backend [[GH-53]](https://github.com/jrasell/sherpa/pull/53)
  * Fix a problem in the Nomad meta policy watcher which meant the process would perform a blocking query on new cluster [[GH-57]](https://github.com/jrasell/sherpa/pull/57)
+ * Fix incorrect response code and msg when scaling breaks thresholds [[GH-62]](https://github.com/jrasell/sherpa/pull/62)
 
 ## 0.1.0 (17 September, 2019)
 
