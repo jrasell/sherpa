@@ -1,5 +1,31 @@
 # System API
 
+## Get Server Leader
+
+This endpoint can  be used to identify the current cluster leader and the storage HA capability.
+
+| Method   | Path                         |
+| :--------------------------- | :--------------------- |
+| `GET`    | `/v1/system/leader`              | `200 application/binary` |
+
+### Sample Request
+
+```
+$ curl \
+    http://127.0.0.1:8000/v1/system/leader
+```
+
+### Sample Response
+
+```json
+{
+  "IsSelf": true,
+  "HAEnabled": true,
+  "LeaderAddress": "127.0.0.1:8000",
+  "LeaderClusterAddress": "http://127.0.0.1:8000"
+}
+```
+
 ## Get Server Health
 
 This endpoint can be used to query the Sherpa server health status.
