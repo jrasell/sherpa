@@ -116,16 +116,16 @@ func (h *HTTPServer) setupSystemRoutes() []router.Route {
 
 	return router.Routes{
 		router.Route{
-			Name:    routeSystemHealthName,
-			Method:  http.MethodGet,
-			Pattern: routeSystemHealthPattern,
-			Handler: leaderProtectedHandler(h.clusterMember, h.routes.System.GetHealth),
+			Name:        routeSystemHealthName,
+			Method:      http.MethodGet,
+			Pattern:     routeSystemHealthPattern,
+			HandlerFunc: h.routes.System.GetHealth,
 		},
 		router.Route{
-			Name:    routeSystemInfoName,
-			Method:  http.MethodGet,
-			Pattern: routeSystemInfoPattern,
-			Handler: leaderProtectedHandler(h.clusterMember, h.routes.System.GetInfo),
+			Name:        routeSystemInfoName,
+			Method:      http.MethodGet,
+			Pattern:     routeSystemInfoPattern,
+			HandlerFunc: h.routes.System.GetInfo,
 		},
 		router.Route{
 			Name:        routeGetMetricsName,
