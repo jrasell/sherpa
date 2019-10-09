@@ -3,7 +3,7 @@ FROM alpine:latest
 LABEL maintainer James Rasell<(jamesrasell@gmail.com)> (@jrasell)
 LABEL vendor "jrasell"
 
-ENV SHERPA_VERSION 0.1.0
+ENV SHERPA_VERSION 0.2.0
 
 WORKDIR /usr/bin/
 
