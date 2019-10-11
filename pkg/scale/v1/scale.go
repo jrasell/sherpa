@@ -77,7 +77,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("job", jobID).
 			Str("group", groupID).
-			Msg("failed to determine scaleResp count based on payload and policy")
+			Msg("failed to determine scale count based on payload and policy")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -88,7 +88,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("job", jobID).
 			Str("group", groupID).
-			Msg("failed to scaleResp in Nomad job group")
+			Msg("failed to scale in Nomad job group")
 		http.Error(w, err.Error(), respCode)
 		return
 	}
@@ -99,7 +99,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if respCode == http.StatusNotModified {
-		http.Error(w, errors.New("unable to scaleResp job").Error(), http.StatusNotModified)
+		http.Error(w, errors.New("unable to scale job").Error(), http.StatusNotModified)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("job", jobID).
 			Str("group", groupID).
-			Msg("failed to determine scaleResp count based on payload and policy")
+			Msg("failed to determine scale count based on payload and policy")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -167,7 +167,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("job", jobID).
 			Str("group", groupID).
-			Msg("failed to scaleResp out Nomad job group")
+			Msg("failed to scale out Nomad job group")
 		http.Error(w, err.Error(), respCode)
 		return
 	}
@@ -178,7 +178,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if respCode == http.StatusNotModified {
-		http.Error(w, "unable to scaleResp job", http.StatusNotModified)
+		http.Error(w, "unable to scale job", http.StatusNotModified)
 		return
 	}
 
