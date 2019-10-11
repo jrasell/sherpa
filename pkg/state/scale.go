@@ -37,6 +37,8 @@ type ScalingEvent struct {
 	// Details contains information about exactly what action was taken on the job group during the
 	// scaling event.
 	Details EventDetails
+
+	Meta map[string]string
 }
 
 // EventDetails contains information to describe what changes took place during the scaling action.
@@ -60,6 +62,7 @@ type ScalingEventMessage struct {
 	Status    Status
 	Count     int
 	Direction string
+	Meta      map[string]string
 }
 
 // Source represents how the scaling action was invoked.
