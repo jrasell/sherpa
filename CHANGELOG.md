@@ -1,5 +1,8 @@
 ## 0.2.1 (Unreleased)
 
+IMPROVEMENTS:
+ * Update vendored version of panjf2000/ants to latest v2 release [[GH-72]](https://github.com/jrasell/sherpa/pull/72)
+
 BUG FIXES:
  * Fix malformed server log messages within the scale endpoint [[GH-69]](https://github.com/jrasell/sherpa/pull/69)
  * Fix issue when autoscaling a job with a mix of groups with and without scaling policies [[GH-71]](https://github.com/jrasell/sherpa/pull/71)
