@@ -30,11 +30,11 @@ import (
 )
 
 const (
-	// DEFAULT_ANTS_POOL_SIZE is the default capacity for a default goroutine pool.
-	DEFAULT_ANTS_POOL_SIZE = math.MaxInt32
+	// DefaultAntsPoolSize is the default capacity for a default goroutine pool.
+	DefaultAntsPoolSize = math.MaxInt32
 
-	// DEFAULT_CLEAN_INTERVAL_TIME is the interval time to clean up goroutines.
-	DEFAULT_CLEAN_INTERVAL_TIME = 1
+	// DefaultCleanIntervalTime is the interval time to clean up goroutines.
+	DefaultCleanIntervalTime = time.Second
 
 	// CLOSED represents that the pool is closed.
 	CLOSED = 1
@@ -77,13 +77,14 @@ var (
 	}()
 
 	// Init a instance pool when importing ants.
-	defaultAntsPool, _ = NewPool(Options{Capacity: DEFAULT_ANTS_POOL_SIZE})
+	defaultAntsPool, _ = NewPool(DefaultAntsPoolSize)
 )
 
-type Options struct {
-	// Capacity of the pool.
-	Capacity int
+// Option represents the optional function.
+type Option func(opts *Options)
 
+// Options contains all options which will be applied when instantiating a ants pool.
+type Options struct {
 	// ExpiryDuration set the expired time (second) of every worker.
 	ExpiryDuration time.Duration
 
@@ -102,9 +103,48 @@ type Options struct {
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
+}
 
-	// PoolFunc is the function for processing tasks.
-	PoolFunc func(interface{})
+// WithOptions accepts the whole options config.
+func WithOptions(options Options) Option {
+	return func(opts *Options) {
+		*opts = options
+	}
+}
+
+// WithExpiryDuration sets up the interval time of cleaning up goroutines.
+func WithExpiryDuration(expiryDuration time.Duration) Option {
+	return func(opts *Options) {
+		opts.ExpiryDuration = expiryDuration
+	}
+}
+
+// WithPreAlloc indicates whether it should malloc for workers.
+func WithPreAlloc(preAlloc bool) Option {
+	return func(opts *Options) {
+		opts.PreAlloc = preAlloc
+	}
+}
+
+// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
+func WithMaxBlockingTasks(maxBlockingTasks int) Option {
+	return func(opts *Options) {
+		opts.MaxBlockingTasks = maxBlockingTasks
+	}
+}
+
+// WithNonblocking indicates that pool will return nil when there is no available workers.
+func WithNonblocking(nonblocking bool) Option {
+	return func(opts *Options) {
+		opts.Nonblocking = nonblocking
+	}
+}
+
+// WithPanicHandler sets up panic handler.
+func WithPanicHandler(panicHandler func(interface{})) Option {
+	return func(opts *Options) {
+		opts.PanicHandler = panicHandler
+	}
 }
 
 // Submit submits a task to pool.

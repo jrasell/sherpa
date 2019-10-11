@@ -9,12 +9,13 @@ A goroutine pool for Go
 <a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square"></a>
 <br/>
 <a title="" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
-<a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square"></a>
+<a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square"></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
 <a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
+<a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge-flat.svg"></a>
 </p>
 
-[英文](README.md) | [项目博客](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+# [[英文](README.md)]
 
 `ants`是一个高性能的协程池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制协程数量，复用资源，达到更高效执行任务的效果。
 
@@ -25,6 +26,7 @@ A goroutine pool for Go
 - 提供了友好的接口：任务提交、获取运行中的协程数量、动态调整协程池大小
 - 优雅处理 panic，防止程序崩溃
 - 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有更高的性能
+- 非阻塞机制
 
 ## 目前测试通过的Golang版本：
 
@@ -33,6 +35,7 @@ A goroutine pool for Go
 - 1.10.x
 - 1.11.x
 - 1.12.x
+- 1.13.x
 
 
 ## 安装
@@ -53,7 +56,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/panjf2000/ants"
+	"github.com/panjf2000/ants/v2"
 )
 
 var sum int32
@@ -88,12 +91,12 @@ func main() {
 	fmt.Printf("running goroutines: %d\n", ants.Running())
 	fmt.Printf("finish all tasks.\n")
 
-	// Use the pool with a method,
+	// Use the pool with a function,
 	// set 10 to the capacity of goroutine pool and 1 second for expired duration.
-	p, _ := ants.NewPoolWithFunc(ants.Options{Capacity: 10, PoolFunc: func(i interface{}) {
+	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		myFunc(i)
 		wg.Done()
-	}})
+	})
 	defer p.Release()
 	// Submit tasks one by one.
 	for i := 0; i < runTimes; i++ {
@@ -114,7 +117,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/panjf2000/ants"
+	"github.com/panjf2000/ants/v2"
 )
 
 type Request struct {
@@ -123,7 +126,7 @@ type Request struct {
 }
 
 func main() {
-  pool, _ := ants.NewPoolWithFunc(ants.Options{Capacity:100, PoolFunc:func(payload interface{}) {
+  pool, _ := ants.NewPoolWithFunc(100000, func(payload interface{}) {
 		request, ok := payload.(*Request)
 		if !ok {
 			return
@@ -136,7 +139,7 @@ func main() {
 		}(request.Param)
 
 		request.Result <- reverseParam
-  }})
+  })
 	defer pool.Release()
 
 	http.HandleFunc("/reverse", func(w http.ResponseWriter, r *http.Request) {
@@ -165,9 +168,6 @@ func main() {
 
 ```go
 type Options struct {
-	// Capacity of the pool.
-	Capacity int
-
 	// ExpiryDuration set the expired time (second) of every worker.
 	ExpiryDuration time.Duration
 
@@ -186,13 +186,46 @@ type Options struct {
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
+}
 
-	// poolFunc is the function for processing tasks.
-	PoolFunc func(interface{})
+func WithOptions(options Options) Option {
+	return func(opts *Options) {
+		*opts = options
+	}
+}
+
+func WithExpiryDuration(expiryDuration time.Duration) Option {
+	return func(opts *Options) {
+		opts.ExpiryDuration = expiryDuration
+	}
+}
+
+func WithPreAlloc(preAlloc bool) Option {
+	return func(opts *Options) {
+		opts.PreAlloc = preAlloc
+	}
+}
+
+func WithMaxBlockingTasks(maxBlockingTasks int) Option {
+	return func(opts *Options) {
+		opts.MaxBlockingTasks = maxBlockingTasks
+	}
+}
+
+func WithNonblocking(nonblocking bool) Option {
+	return func(opts *Options) {
+		opts.Nonblocking = nonblocking
+	}
+}
+
+func WithPanicHandler(panicHandler func(interface{})) Option {
+	return func(opts *Options) {
+		opts.PanicHandler = panicHandler
+	}
 }
 ```
 
-你可以根据自己的需求在`ants.Options`中设置各个配置项的值，然后用它来初始化 goroutine pool.
+通过在调用`NewPool`/`NewPoolWithFunc`之时使用各种 optional function，可以设置`ants.Options`中各个配置项的值，然后用它来定制化 goroutine pool.
 
 
 ## 自定义池
@@ -200,7 +233,7 @@ type Options struct {
 
 ``` go
 // Set 10000 the size of goroutine pool
-p, _ := ants.NewPool(ants.Options{Capacity: 10000})
+p, _ := ants.NewPool(10000)
 ```
 
 ## 任务提交
@@ -226,7 +259,7 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this function
-p, _ := ants.NewPool(ants.Options{Capacity: AntsSize, PreAlloc: true})
+p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
 
@@ -239,24 +272,12 @@ pool.Release()
 
 ## Benchmarks
 
-系统参数：
-
-```
-OS: macOS High Sierra
-Processor: 2.7 GHz Intel Core i5
-Memory: 8 GB 1867 MHz DDR3
-
-Go Version: 1.9
-```
-
-
-
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
-上图中的前两个 benchmark 测试结果是基于100w 任务量的条件，剩下的几个是基于 1000w 任务量的测试结果，`ants`的默认池容量是 5w。
+上图中的前两个 benchmark 测试结果是基于100w 任务量的条件，剩下的几个是基于 1000w 任务量的测试结果，`ants` 的默认池容量是 5w。
 
 - BenchmarkGoroutine-4 代表原生 goroutine
 
-- BenchmarkPoolGroutine-4 代表使用协程池`ants`
+- BenchmarkPoolGroutine-4 代表使用协程池 `ants`
 
 ### Benchmarks with Pool 
 
@@ -286,6 +307,18 @@ Go Version: 1.9
 
 ### 性能小结
 
-![](https://user-images.githubusercontent.com/7496278/52989641-51b65a80-343f-11e9-86c0-e855d97343ea.gif)
+![](https://user-images.githubusercontent.com/7496278/63449727-3ae6d400-c473-11e9-81e3-8b3280d8288a.gif)
 
 **从该 demo 测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生 goroutine 可以保持在 2-6 倍的性能压制，而内存消耗则可以达到 10-20 倍的节省优势。** 
+
+# 证书
+
+`gnet` 的源码允许用户在遵循 MIT [开源证书](/LICENSE) 规则的前提下使用。
+
+# 相关文章 
+
+-  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+
+# 谁在使用 ants（欢迎补充 ~~）
+
+[![](https://raw.githubusercontent.com/panjf2000/gnet/master/logo.png)](https://github.com/panjf2000/gnet)
