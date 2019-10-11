@@ -7,7 +7,7 @@ import (
 	"github.com/jrasell/sherpa/pkg/policy"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
-	"github.com/panjf2000/ants"
+	ants "github.com/panjf2000/ants/v2"
 	"github.com/rs/zerolog"
 )
 
@@ -156,13 +156,7 @@ func (a *AutoScale) setScalingInProgressFalse() {
 // createWorkerPool is responsible for building the ants goroutine worker pool with the number of
 // threads controlled by the operator configured value.
 func (a *AutoScale) createWorkerPool() (*ants.PoolWithFunc, error) {
-	return ants.NewPoolWithFunc(
-		ants.Options{
-			Capacity:       a.cfg.ScalingThreads,
-			ExpiryDuration: 60 * time.Second,
-			PoolFunc:       a.workerPoolFunc(),
-		},
-	)
+	return ants.NewPoolWithFunc(a.cfg.ScalingThreads, a.workerPoolFunc(), ants.WithExpiryDuration(60*time.Second))
 }
 
 func (a *AutoScale) workerPoolFunc() func(payload interface{}) {

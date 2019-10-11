@@ -15,7 +15,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.7
 	github.com/oklog/run v1.0.0
-	github.com/panjf2000/ants v0.0.0-20190820151255-b60dfa8c16b0
+	github.com/panjf2000/ants/v2 v2.1.1
 	github.com/pkg/errors v0.8.1
 	github.com/rs/zerolog v1.14.3
 	github.com/ryanuber/columnize v2.1.0+incompatible
