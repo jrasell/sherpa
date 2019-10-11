@@ -113,8 +113,14 @@ func (a *AutoScale) getJobAllocations(jobID string, policies map[string]*policy.
 
 	for i := range allocs {
 
-		if !policies[allocs[i].TaskGroup].Enabled {
+		// GH-70: jobs can have a mix of groups with scaling policies, and groups without. We need
+		// to safely check the policy.
+		if v, ok := policies[allocs[i].TaskGroup]; !ok {
 			break
+		} else {
+			if !v.Enabled {
+				break
+			}
 		}
 
 		if !(allocs[i].ClientStatus == nomad.AllocClientStatusRunning || allocs[i].ClientStatus == nomad.AllocClientStatusPending) {
