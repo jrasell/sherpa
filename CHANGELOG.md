@@ -1,3 +1,8 @@
+## 0.2.1 (Unreleased)
+
+BUG FIXES:
+ * Fix malformed server log messages within the scale endpoint [[GH-69]](https://github.com/jrasell/sherpa/pull/69)
+
 ## 0.2.0 (10 October, 2019)
 
 IMPROVEMENTS:
