@@ -1,4 +1,4 @@
-## 0.2.1 (Unreleased)
+## 0.2.1 (11 October, 2019)
 
 IMPROVEMENTS:
  * Update vendored version of panjf2000/ants to latest v2 release [[GH-72]](https://github.com/jrasell/sherpa/pull/72)
