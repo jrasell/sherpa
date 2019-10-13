@@ -84,6 +84,8 @@ var tmplScaleEvent = template.Must(template.New("scaling-events").Parse(`
             var thead = '<thead><tr>';
             thead += '<th>ID</th>';
             thead += '<th>Job:Group</th>';
+            thead += '<th>Direction</th>';
+            thead += '<th>Count</th>';
             thead += '<th>Status</th>';
             thead += '<th>Time</th>';
             thead += '</tr></thead>';
@@ -93,6 +95,8 @@ var tmplScaleEvent = template.Must(template.New("scaling-events").Parse(`
                     var $tr = $('<tr />');
                     $tr.append($('<td />').text(id));
                     $tr.append($('<td />').text(jbname));
+                    $tr.append($('<td />').text(event.Details.Direction))
+                    $tr.append($('<td />').text(event.Details.Count))
                     $tr.append($('<td />').text(event.Status));
                     $tr.append($('<td />').text(timeConverter(event.Time)));
                     $tr.appendTo($tbody);
