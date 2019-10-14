@@ -7,7 +7,7 @@ import (
 	"github.com/jrasell/sherpa/pkg/state"
 )
 
-func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.GroupScalingPolicy) {
+func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.GroupScalingPolicy, t int64) {
 	resourceInfo, allocs, err := a.getJobAllocations(jobID, policies)
 	if err != nil {
 		a.logger.Error().
@@ -74,7 +74,13 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		}
 
 		if scalingDir != "" {
-			req := &scale.GroupReq{Direction: scalingDir, Count: count, GroupName: group, GroupScalingPolicy: pol}
+			req := &scale.GroupReq{
+				Direction:          scalingDir,
+				Count:              count,
+				GroupName:          group,
+				GroupScalingPolicy: pol,
+				Time:               t,
+			}
 			scaleReq = append(scaleReq, req)
 
 			a.logger.Debug().

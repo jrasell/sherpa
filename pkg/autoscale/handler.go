@@ -35,6 +35,7 @@ type scalableResources struct {
 }
 
 type workerPayload struct {
+	time   time.Time
 	jobID  string
 	policy map[string]*policy.GroupScalingPolicy
 }
@@ -100,21 +101,54 @@ func (a *AutoScale) Run() {
 
 			for job := range allPolicies {
 
-				// Create a new policy object to track groups that are not considered to be in
-				// deployment.
-				nonDeploying := make(map[string]*policy.GroupScalingPolicy)
+				// Generate a timestamp for the occurrence of this autoscaling attempt.
+				t := time.Now().UTC()
 
-				// Iterate the group policies, and check whether they are in deployment or not.
+				// Create a new policy object to track groups that are not considered to be in
+				// deployment or in cooldown.
+				safeScale := make(map[string]*policy.GroupScalingPolicy)
+
+				// Iterate the group policies, and check whether they are in deployment or in
+				// cooldown.
 				for group := range allPolicies[job] {
-					if !a.scaler.JobGroupIsDeploying(job, group) {
-						nonDeploying[group] = allPolicies[job][group]
+
+					// Deployment check.
+					if a.scaler.JobGroupIsDeploying(job, group) {
+						a.logger.Debug().
+							Str("job", job).
+							Str("group", group).
+							Msg("job group is currently in deployment, skipping autoscaler evaluation")
+						break
 					}
+
+					// Cooldown check.
+					cool, err := a.scaler.JobGroupIsInCooldown(job, group, allPolicies[job][group].Cooldown, t.UnixNano())
+					if err != nil {
+						a.logger.Error().
+							Err(err).
+							Str("job", job).
+							Str("group", group).
+							Msg("failed to determine if job group is in cooldown")
+						break
+					}
+					if cool {
+						a.logger.Debug().
+							Err(err).
+							Str("job", job).
+							Str("group", group).
+							Msg("job group is currently in scaling cooldown, skipping autoscaler evaluation")
+						break
+					}
+
+					// At this point the initial checks have passed, therefore we can add the group
+					// to the map indicating we can continue within the evaluation.
+					safeScale[group] = allPolicies[job][group]
 				}
 
 				// If we have groups within the job that are not deploying, we can trigger a
 				// scaling event.
-				if len(nonDeploying) > 0 {
-					if err := a.pool.Invoke(&workerPayload{jobID: job, policy: allPolicies[job]}); err != nil {
+				if len(safeScale) > 0 {
+					if err := a.pool.Invoke(&workerPayload{jobID: job, policy: allPolicies[job], time: t}); err != nil {
 						a.logger.Error().Err(err).Msg("failed to invoke autoscaling worker thread")
 					}
 				}
@@ -176,6 +210,8 @@ func (a *AutoScale) workerPoolFunc() func(payload interface{}) {
 			a.logger.Error().Msg("autoscaler worker pool received unexpected payload type")
 			return
 		}
-		a.autoscaleJob(req.jobID, req.policy)
+		a.autoscaleJob(req.jobID, req.policy, req.time.UnixNano())
 	}
 }
+
+func (a *AutoScale) getSafeToEvaluateJobGroups() {}

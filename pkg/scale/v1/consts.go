@@ -14,6 +14,7 @@ const (
 	countFailed                = 0
 	headerKeyContentType       = "Content-Type"
 	headerValueContentTypeJSON = "application/json; charset=utf-8"
+	jobGroupInCooldownMsg      = "job group is currently in scaling cooldown"
 )
 
 var (

@@ -8,6 +8,15 @@ import (
 // Backend is the interface required for a state storage backend. A state storage backend is used
 // to durably store job scaling state outside of Sherpa.
 type Backend interface {
+
+	// GetLatestScalingEvents is used to pull all the currently stored latest scaling events from
+	// the storage backend.
+	GetLatestScalingEvents() (map[string]*state.ScalingEvent, error)
+
+	// GetLatestScalingEvent is used to pull the latest scaling event for the particular job group
+	// from the storage backend if we have a record.
+	GetLatestScalingEvent(job, group string) (*state.ScalingEvent, error)
+
 	// GetScalingEvents returns all scaling events held within the state.
 	GetScalingEvents() (map[uuid.UUID]map[string]*state.ScalingEvent, error)
 
