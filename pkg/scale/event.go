@@ -6,7 +6,7 @@ import (
 	"github.com/jrasell/sherpa/pkg/state"
 )
 
-func (s *Scaler) sendScalingEventToState(job, id string, source state.Source, groupReqs []*GroupReq, err error) uuid.UUID {
+func (s *Scaler) sendScalingEventToState(job, id string, source state.Source, groupReqs []*GroupReq, err error, meta map[string]string) uuid.UUID {
 
 	status := s.generateEventStatus(err)
 
@@ -25,6 +25,7 @@ func (s *Scaler) sendScalingEventToState(job, id string, source state.Source, gr
 			Time:      helper.GenerateEventTimestamp(),
 			Count:     groupReqs[i].Count,
 			Direction: groupReqs[i].Direction.String(),
+			Meta:      meta,
 		}
 
 		if err := s.state.PutScalingEvent(job, &event); err != nil {

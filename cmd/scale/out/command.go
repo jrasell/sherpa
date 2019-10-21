@@ -51,11 +51,11 @@ func runOut(_ *cobra.Command, args []string) {
 		os.Exit(sysexits.Usage)
 	}
 
-	os.Exit(runJobGroupScaleOut(client, args[0], scaleConfig.GroupName, scaleConfig.Count))
+	os.Exit(runJobGroupScaleOut(client, args[0], scaleConfig.GroupName, scaleConfig.Count, scaleConfig.Meta))
 }
 
-func runJobGroupScaleOut(c *api.Client, job, group string, count int) int {
-	resp, err := c.Scale().JobGroupOut(job, group, count)
+func runJobGroupScaleOut(c *api.Client, job, group string, count int, meta map[string]string) int {
+	resp, err := c.Scale().JobGroupOut(job, group, count, meta)
 	if err != nil {
 		fmt.Println("Error scaling out job group:", err)
 		return sysexits.Software

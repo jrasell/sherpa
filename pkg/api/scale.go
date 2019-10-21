@@ -15,6 +15,10 @@ type ScaleReq struct {
 	Count int
 }
 
+type scaleReqBody struct {
+	Meta map[string]string
+}
+
 type ScaleResp struct {
 	ID           uuid.UUID
 	EvaluationID string
@@ -26,6 +30,7 @@ type ScalingEvent struct {
 	Time    int64
 	Status  string
 	Details EventDetails
+	Meta    map[string]string
 }
 
 type EventDetails struct {
@@ -37,7 +42,7 @@ func (c *Client) Scale() *Scale {
 	return &Scale{client: c}
 }
 
-func (s *Scale) JobGroupOut(job, group string, count int) (*ScaleResp, error) {
+func (s *Scale) JobGroupOut(job, group string, count int, meta map[string]string) (*ScaleResp, error) {
 	var resp ScaleResp
 
 	path := fmt.Sprintf("/v1/scale/out/%s/%s", job, group)
@@ -48,14 +53,14 @@ func (s *Scale) JobGroupOut(job, group string, count int) (*ScaleResp, error) {
 		q.Params["count"] = strconv.Itoa(count)
 	}
 
-	err := s.client.put(path, nil, &resp, &q)
+	err := s.client.put(path, buildScaleReqBody(meta), &resp, &q)
 	if err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
-func (s *Scale) JobGroupIn(job, group string, count int) (*ScaleResp, error) {
+func (s *Scale) JobGroupIn(job, group string, count int, meta map[string]string) (*ScaleResp, error) {
 	var resp ScaleResp
 
 	var q QueryOptions
@@ -66,7 +71,7 @@ func (s *Scale) JobGroupIn(job, group string, count int) (*ScaleResp, error) {
 
 	path := fmt.Sprintf("/v1/scale/in/%s/%s", job, group)
 
-	err := s.client.put(path, nil, &resp, &q)
+	err := s.client.put(path, buildScaleReqBody(meta), &resp, &q)
 	if err != nil {
 		return nil, err
 	}
@@ -89,4 +94,12 @@ func (s *Scale) Info(id string) (map[string]*ScalingEvent, error) {
 		return nil, err
 	}
 	return resp, nil
+}
+
+func buildScaleReqBody(meta map[string]string) interface{} {
+	if meta == nil {
+		return nil
+	}
+
+	return &scaleReqBody{meta}
 }
