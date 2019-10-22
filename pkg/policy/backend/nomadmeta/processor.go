@@ -138,12 +138,12 @@ func (pr *Processor) maxCountValueOrDefault(meta map[string]string) int {
 
 func (pr *Processor) minCountValueOrDefault(meta map[string]string) int {
 	if val, ok := meta[metaKeyMinCount]; ok {
-		maxInt, err := strconv.Atoi(val)
+		minInt, err := strconv.Atoi(val)
 		if err != nil {
 			pr.logger.Error().Err(err).Msg("failed to convert min count meta value to int")
 			return policy.DefaultMinCount
 		}
-		return maxInt
+		return minInt
 	}
 	return policy.DefaultMinCount
 }
