@@ -103,6 +103,7 @@ func (pr *Processor) policyFromMeta(meta map[string]string) *policy.GroupScaling
 		MaxCount:                          pr.maxCountValueOrDefault(meta),
 		MinCount:                          pr.minCountValueOrDefault(meta),
 		Enabled:                           pr.enabledValueOrDefault(meta),
+		Cooldown:                          pr.cooldownValueOrDefault(meta),
 		ScaleInCount:                      pr.scaleInValueOrDefault(meta),
 		ScaleOutCount:                     pr.scaleOutValueOrDefault(meta),
 		ScaleOutCPUPercentageThreshold:    pr.scaleOutCPUThresholdValueOrDefault(meta),
@@ -122,6 +123,18 @@ func (pr *Processor) enabledValueOrDefault(meta map[string]string) bool {
 		return enabled
 	}
 	return false
+}
+
+func (pr *Processor) cooldownValueOrDefault(meta map[string]string) int {
+	if val, ok := meta[metaKeyCooldown]; ok {
+		cooldown, err := strconv.Atoi(val)
+		if err != nil {
+			pr.logger.Error().Err(err).Msg("failed to convert cooldown meta value to int")
+			return policy.DefaultCooldown
+		}
+		return cooldown
+	}
+	return policy.DefaultCooldown
 }
 
 func (pr *Processor) maxCountValueOrDefault(meta map[string]string) int {

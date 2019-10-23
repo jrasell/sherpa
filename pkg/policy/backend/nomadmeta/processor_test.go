@@ -18,6 +18,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 		{
 			meta: map[string]string{
 				metaKeyEnabled:                           "true",
+				metaKeyCooldown:                          "10",
 				metaKeyMaxCount:                          "100",
 				metaKeyMinCount:                          "50",
 				metaKeyScaleInCount:                      "3",
@@ -29,6 +30,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
 				Enabled:                           true,
+				Cooldown:                          10,
 				MinCount:                          50,
 				MaxCount:                          100,
 				ScaleOutCount:                     7,
@@ -45,6 +47,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
 				Enabled:                           true,
+				Cooldown:                          180,
 				MinCount:                          2,
 				MaxCount:                          10,
 				ScaleOutCount:                     1,
@@ -61,6 +64,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
 				Enabled:                           false,
+				Cooldown:                          180,
 				MinCount:                          2,
 				MaxCount:                          10,
 				ScaleOutCount:                     1,
@@ -74,6 +78,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 		{
 			meta: map[string]string{
 				metaKeyEnabled:                           "true",
+				metaKeyCooldown:                          "18000",
 				metaKeyMaxCount:                          "10000",
 				metaKeyScaleOutCount:                     "1000",
 				metaKeyScaleInCount:                      "10",
@@ -84,6 +89,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
 				Enabled:                           true,
+				Cooldown:                          18000,
 				MinCount:                          2,
 				MaxCount:                          10000,
 				ScaleOutCount:                     1000,
@@ -97,6 +103,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 		{
 			meta: map[string]string{
 				metaKeyEnabled:                           "untranslatable",
+				metaKeyCooldown:                          "untranslatable",
 				metaKeyMinCount:                          "untranslatable",
 				metaKeyMaxCount:                          "untranslatable",
 				metaKeyScaleOutCount:                     "untranslatable",
@@ -108,6 +115,7 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
 				Enabled:                           false,
+				Cooldown:                          180,
 				MinCount:                          2,
 				MaxCount:                          10,
 				ScaleOutCount:                     1,
