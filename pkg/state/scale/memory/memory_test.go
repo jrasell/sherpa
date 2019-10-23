@@ -112,6 +112,10 @@ func generateTestEvent(t int64) *state.ScalingEventMessage {
 		Status:    state.StatusCompleted,
 		Count:     1,
 		Direction: "in",
+		Meta: map[string]string{
+			"metric": "cpu",
+			"value":  "99",
+		},
 	}
 }
 
@@ -122,5 +126,6 @@ func convertMessageToStateRepresentation(event *state.ScalingEventMessage) *stat
 		Time:    event.Time,
 		Status:  event.Status,
 		Details: state.EventDetails{Count: event.Count, Direction: event.Direction},
+		Meta:    event.Meta,
 	}
 }

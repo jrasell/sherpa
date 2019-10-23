@@ -154,6 +154,7 @@ func (s StateBackend) PutScalingEvent(job string, event *state.ScalingEventMessa
 		Time:    event.Time,
 		Status:  event.Status,
 		Details: state.EventDetails{Count: event.Count, Direction: event.Direction},
+		Meta:    event.Meta,
 	}
 
 	marshal, err := json.Marshal(sEntry)

@@ -44,7 +44,7 @@ func NewScaler(c *api.Client, l zerolog.Logger, state scale.Backend, strictCheck
 //		- the Nomad API job register response
 //		- the HTTP return code, used for the Sherpa API
 //		- any error
-func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq, source state.Source) (*ScalingResponse, int, error) {
+func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq, source state.Source, meta map[string]string) (*ScalingResponse, int, error) {
 
 	// In order to submit a job for scaling we need to read the entire job back to Nomad as it does
 	// not currently have convenience methods for changing job group counts.
@@ -80,11 +80,11 @@ func (s *Scaler) Trigger(jobID string, groupReqs []*GroupReq, source state.Sourc
 
 	resp, err := s.triggerNomadRegister(job)
 
-	return s.handleEndState(jobID, resp, err, groupReqs, source)
+	return s.handleEndState(jobID, resp, err, groupReqs, source, meta)
 }
 
 func (s *Scaler) handleEndState(job string, apiResp *api.JobRegisterResponse, apiErr error, groupReqs []*GroupReq,
-	source state.Source) (*ScalingResponse, int, error) {
+	source state.Source, meta map[string]string) (*ScalingResponse, int, error) {
 
 	eval := ""
 
@@ -92,7 +92,7 @@ func (s *Scaler) handleEndState(job string, apiResp *api.JobRegisterResponse, ap
 		eval = apiResp.EvalID
 	}
 
-	scaleID := s.sendScalingEventToState(job, eval, source, groupReqs, apiErr)
+	scaleID := s.sendScalingEventToState(job, eval, source, groupReqs, apiErr, meta)
 
 	if apiErr != nil {
 		return nil, http.StatusInternalServerError, apiErr

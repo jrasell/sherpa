@@ -10,7 +10,7 @@ import (
 // Scale is the interface used for scaling a Nomad job.
 type Scale interface {
 	// Trigger performs scaling of 1 or more job groups which belong to the same job.
-	Trigger(string, []*GroupReq, state.Source) (*ScalingResponse, int, error)
+	Trigger(string, []*GroupReq, state.Source, map[string]string) (*ScalingResponse, int, error)
 
 	// GetDeploymentChannel is used to return the channel where updates to Nomad deployments should
 	// be sent.

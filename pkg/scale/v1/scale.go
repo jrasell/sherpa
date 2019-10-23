@@ -31,6 +31,10 @@ type ScaleConfig struct {
 	State  stateBackend.Backend
 }
 
+type scaleRequestBody struct {
+	Meta map[string]string
+}
+
 func NewScaleServer(strict bool, cfg *ScaleConfig) *Scale {
 	return &Scale{
 		logger:         cfg.Logger,
@@ -46,6 +50,11 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 	jobID := vars["job_id"]
 	groupID := vars["group"]
 
+	body, err := parseScaleRequestBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	newReq := &scale.GroupReq{Direction: scale.DirectionIn, GroupName: groupID, Time: helper.GenerateEventTimestamp()}
 
 	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
@@ -105,7 +114,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI)
+	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI, body.Meta)
 	if err != nil {
 		s.logger.Error().
 			Err(err).
@@ -146,6 +155,11 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 	jobID := vars["job_id"]
 	groupID := vars["group"]
 
+	body, err := parseScaleRequestBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	newReq := &scale.GroupReq{Direction: scale.DirectionOut, GroupName: groupID, Time: helper.GenerateEventTimestamp()}
 
 	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
@@ -206,7 +220,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI)
+	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI, body.Meta)
 	if err != nil {
 		s.logger.Error().
 			Err(err).
@@ -240,4 +254,21 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSONResponse(w, bytes, http.StatusOK)
+}
+
+func parseScaleRequestBody(r *http.Request) (*scaleRequestBody, error) {
+	if r.ContentLength < 1 {
+		empty := &scaleRequestBody{
+			Meta: map[string]string{},
+		}
+		return empty, nil
+	}
+
+	var body scaleRequestBody
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &body, nil
 }

@@ -1,8 +1,10 @@
 package test
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	nomad "github.com/hashicorp/nomad/api"
@@ -55,7 +57,7 @@ func TestScaleOut_singleTaskGroupCountSet(t *testing.T) {
 			},
 			{
 				Runner: func(s *acctest.TestState) error {
-					resp, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 2)
+					resp, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 2, nil)
 					if err != nil {
 						return err
 					}
@@ -118,7 +120,7 @@ func TestScaleOut_singleTaskGroupCountSetTooHigh(t *testing.T) {
 			},
 			{
 				Runner: func(s *acctest.TestState) error {
-					_, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 10)
+					_, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 10, nil)
 					if err != nil {
 						return err
 					}
@@ -175,7 +177,7 @@ func TestScaleOut_singleTaskGroupPolicyDisabled(t *testing.T) {
 			},
 			{
 				Runner: func(s *acctest.TestState) error {
-					_, err := s.Sherpa.Scale().JobGroupIn(s.JobName, testScaleOutGroupName1, 10)
+					_, err := s.Sherpa.Scale().JobGroupIn(s.JobName, testScaleOutGroupName1, 10, nil)
 					if err != nil {
 						return err
 					}
@@ -186,6 +188,60 @@ func TestScaleOut_singleTaskGroupPolicyDisabled(t *testing.T) {
 			},
 			{
 				Runner: acctest.CheckTaskGroupCount(testScaleOutGroupName1, 1),
+			},
+		},
+		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy, acctest.CleanupPurgeJob},
+	})
+}
+
+func TestScaleOut_singleTaskGroupMeta(t *testing.T) {
+	if os.Getenv("SHERPA_ACC_META") != "" {
+		t.SkipNow()
+	}
+
+	acctest.Test(t, acctest.TestCase{
+		Steps: []acctest.TestStep{
+			{
+				Runner: func(s *acctest.TestState) error {
+					policy := &api.JobGroupPolicy{Enabled: true, MaxCount: 5, MinCount: 1}
+					return s.Sherpa.Policies().WriteJobGroupPolicy(s.JobName, testScaleOutGroupName1, policy)
+				},
+			},
+			{
+				Runner: func(s *acctest.TestState) error {
+					_, _, err := s.Nomad.Jobs().Register(buildScaleOutTestJob(s.JobName), nil)
+					if err != nil {
+						return err
+					}
+					return acctest.CheckJobReachesStatus(s, "running")
+				},
+			},
+			{
+				Runner: func(s *acctest.TestState) error {
+					meta := map[string]string{
+						"test-name": s.JobName,
+					}
+					resp, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 2, meta)
+					if err != nil {
+						return err
+					}
+
+					event, err := s.Sherpa.Scale().Info(resp.ID.String())
+					if err != nil {
+						return err
+					}
+
+					e, ok := event[s.JobName+":"+testScaleOutGroupName1]
+					if !ok {
+						return errors.New("scaling event group not found")
+					}
+
+					if !reflect.DeepEqual(meta, e.Meta) {
+						return errors.New("meta in event does not equal input")
+					}
+
+					return nil
+				},
 			},
 		},
 		CleanupFuncs: []acctest.TestStateFunc{acctest.CleanupSherpaPolicy, acctest.CleanupPurgeJob},
@@ -229,7 +285,7 @@ func TestScaleOut_singleTaskGroupWithHighCooldown(t *testing.T) {
 			},
 			{
 				Runner: func(s *acctest.TestState) error {
-					resp, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 3)
+					resp, err := s.Sherpa.Scale().JobGroupOut(s.JobName, testScaleOutGroupName1, 3, nil)
 					if err != nil {
 						return err
 					}
@@ -246,7 +302,7 @@ func TestScaleOut_singleTaskGroupWithHighCooldown(t *testing.T) {
 			},
 			{
 				Runner: func(s *acctest.TestState) error {
-					_, err := s.Sherpa.Scale().JobGroupIn(s.JobName, testScaleOutGroupName1, 1)
+					_, err := s.Sherpa.Scale().JobGroupIn(s.JobName, testScaleOutGroupName1, 1, nil)
 					if err != nil {
 						return err
 					}
