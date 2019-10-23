@@ -3,6 +3,9 @@
 IMPROVEMENTS:
  * The web UI now includes the count and direction of scaling events [[GH-75]](https://github.com/jrasell/sherpa/pull/75)
  * Custom metadata can now be added to scaling events as string key/value pairs [[GH-75]](https://github.com/jrasell/sherpa/pull/74)
+ 
+REFACTOR:
+ * Fix incorrect variable name definition within policy meta [[GH-79]](https://github.com/jrasell/sherpa/pull/79)
 
 ## 0.2.1 (11 October, 2019)
 
