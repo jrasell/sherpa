@@ -6,6 +6,7 @@ import "github.com/pkg/errors"
 func Validate(pol *GroupScalingPolicy) error {
 	if pol.MinCount == 0 &&
 		pol.MaxCount == 0 &&
+		pol.Cooldown == 0 &&
 		!pol.Enabled &&
 		pol.ScaleInCount == 0 &&
 		pol.ScaleOutCount == 0 {
@@ -22,6 +23,9 @@ func MergeWithDefaults(pol *GroupScalingPolicy) {
 	}
 	if pol.MaxCount == 0 {
 		pol.MaxCount = DefaultMaxCount
+	}
+	if pol.Cooldown == 0 {
+		pol.Cooldown = DefaultCooldown
 	}
 	if pol.ScaleOutCount == 0 {
 		pol.ScaleOutCount = DefaultScaleOutCount

@@ -46,6 +46,49 @@ func NewStateBackend(log zerolog.Logger, path string) scale.Backend {
 	}
 }
 
+func (s StateBackend) GetLatestScalingEvents() (map[string]*state.ScalingEvent, error) {
+	kv, _, err := s.kv.List(s.latestEventsPath, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if kv == nil {
+		return nil, nil
+	}
+
+	out := make(map[string]*state.ScalingEvent)
+
+	for i := range kv {
+		event := &state.ScalingEvent{}
+
+		if err := json.Unmarshal(kv[i].Value, event); err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal Consul KV value")
+		}
+
+		keySplit := strings.Split(kv[i].Key, "/")
+		out[keySplit[len(keySplit)-1]] = event
+	}
+
+	return out, nil
+}
+
+func (s StateBackend) GetLatestScalingEvent(job, group string) (*state.ScalingEvent, error) {
+	kv, _, err := s.kv.Get(s.latestEventsPath+job+":"+group, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if kv == nil {
+		return nil, nil
+	}
+
+	out := state.ScalingEvent{}
+	if err := json.Unmarshal(kv.Value, &out); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal Consul KV value")
+	}
+	return &out, nil
+}
+
 func (s StateBackend) GetScalingEvents() (map[uuid.UUID]map[string]*state.ScalingEvent, error) {
 	kv, _, err := s.kv.List(s.eventsPath, nil)
 	if err != nil {

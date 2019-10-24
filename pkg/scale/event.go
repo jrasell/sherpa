@@ -2,7 +2,6 @@ package scale
 
 import (
 	"github.com/gofrs/uuid"
-	"github.com/jrasell/sherpa/pkg/helper"
 	"github.com/jrasell/sherpa/pkg/state"
 )
 
@@ -22,7 +21,7 @@ func (s *Scaler) sendScalingEventToState(job, id string, source state.Source, gr
 			GroupName: groupReqs[i].GroupName,
 			Status:    status,
 			Source:    source,
-			Time:      helper.GenerateEventTimestamp(),
+			Time:      groupReqs[i].Time,
 			Count:     groupReqs[i].Count,
 			Direction: groupReqs[i].Direction.String(),
 			Meta:      meta,

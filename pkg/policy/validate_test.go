@@ -37,6 +37,7 @@ func Test_MergeWithDefaults(t *testing.T) {
 				Enabled:                           true,
 				MinCount:                          DefaultMinCount,
 				MaxCount:                          DefaultMaxCount,
+				Cooldown:                          DefaultCooldown,
 				ScaleInCount:                      DefaultScaleInCount,
 				ScaleOutCount:                     DefaultScaleOutCount,
 				ScaleOutCPUPercentageThreshold:    DefaultScaleOutCPUPercentageThreshold,

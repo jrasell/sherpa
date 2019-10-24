@@ -24,6 +24,10 @@ type Scale interface {
 	// currently in deployment.
 	JobGroupIsDeploying(job, group string) bool
 
+	// JobGroupIsInCooldown checks whether the job group in question is currently in scaling
+	// cooldown using the input time as the comparison.
+	JobGroupIsInCooldown(job, group string, cooldown int, time int64) (bool, error)
+
 	checkJobGroupExists(*api.Job, string) *api.TaskGroup
 
 	getNewGroupCount(*api.TaskGroup, *GroupReq) int
@@ -48,6 +52,11 @@ type GroupReq struct {
 	// GroupScalingPolicy should include the job group scaling policy if it exists within the
 	// Sherpa server.
 	GroupScalingPolicy *policy.GroupScalingPolicy
+
+	// Time is the UnixNano time representation which indicates when this scaling request was first
+	// triggered. This is to help coordinate with checks such as cooldown and ensure a single time
+	// can be used.
+	Time int64
 }
 
 type ScalingResponse struct {

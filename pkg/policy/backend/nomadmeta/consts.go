@@ -2,6 +2,7 @@ package nomadmeta
 
 const (
 	metaKeyEnabled                           = "sherpa_enabled"
+	metaKeyCooldown                          = "sherpa_cooldown"
 	metaKeyMaxCount                          = "sherpa_max_count"
 	metaKeyMinCount                          = "sherpa_min_count"
 	metaKeyScaleInCount                      = "sherpa_scale_in_count"

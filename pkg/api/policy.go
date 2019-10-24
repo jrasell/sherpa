@@ -12,13 +12,14 @@ func (c *Client) Policies() *Policies {
 	return &Policies{client: c}
 }
 
+// JobGroupPolicy represents an individual job group scaling policy.
 type JobGroupPolicy struct {
-	Enabled       bool
-	MaxCount      int
-	MinCount      int
-	ScaleOutCount int
-	ScaleInCount  int
-
+	Enabled                           bool
+	Cooldown                          int
+	MaxCount                          int
+	MinCount                          int
+	ScaleOutCount                     int
+	ScaleInCount                      int
 	ScaleOutCPUPercentageThreshold    int
 	ScaleOutMemoryPercentageThreshold int
 	ScaleInCPUPercentageThreshold     int

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	outputHeader = "Job:Group|Enabled|MinCount|MaxCount|ScaleInCount|ScaleOutCount"
+	outputHeader = "Job:Group|Enabled|MinCount|MaxCount|Cooldown|ScaleInCount|ScaleOutCount"
 )
 
 func RegisterCommand(rootCmd *cobra.Command) error {
@@ -59,8 +59,8 @@ func runList(_ *cobra.Command, args []string) {
 
 	for job, v := range *resp {
 		for group, pol := range v {
-			out = append(out, fmt.Sprintf("%s:%s|%v|%v|%v|%v|%v",
-				job, group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.ScaleInCount, pol.ScaleOutCount))
+			out = append(out, fmt.Sprintf("%s:%s|%v|%v|%v|%v|%v|%v",
+				job, group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.Cooldown, pol.ScaleInCount, pol.ScaleOutCount))
 		}
 	}
 	fmt.Println(helper.FormatList(out))

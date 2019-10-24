@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	initPolicyCountSection = "{\"Enabled\":true,\"MaxCount\":16,\"MinCount\":4,\"ScaleOutCount\":2,\"ScaleInCount\":2,"
+	initPolicyCountSection = "{\"Enabled\":true,\"Cooldown\":120,\"MaxCount\":16,\"MinCount\":4,\"ScaleOutCount\":2,\"ScaleInCount\":2,"
 	thresholdPolicySection = "\"ScaleOutCPUPercentageThreshold\":75,\"ScaleOutMemoryPercentageThreshold\":75,\"ScaleInCPUPercentageThreshold\":30,\"ScaleInMemoryPercentageThreshold\":30}"
 )
 

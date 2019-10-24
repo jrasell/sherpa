@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	outputHeader = "Group|Enabled|MinCount|MaxCount|ScaleInCount|ScaleOutCount"
+	outputHeader = "Group|Enabled|MinCount|MaxCount|Cooldown|ScaleInCount|ScaleOutCount"
 )
 
 func RegisterCommand(rootCmd *cobra.Command) error {
@@ -64,8 +64,8 @@ func runRead(_ *cobra.Command, args []string) {
 	out := []string{outputHeader}
 
 	for group, pol := range *resp {
-		out = append(out, fmt.Sprintf("%s|%v|%v|%v|%v|%v",
-			group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.ScaleInCount, pol.ScaleOutCount))
+		out = append(out, fmt.Sprintf("%s|%v|%v|%v|%v|%v|%v",
+			group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.Cooldown, pol.ScaleInCount, pol.ScaleOutCount))
 	}
 	fmt.Println(helper.FormatList(out))
 }

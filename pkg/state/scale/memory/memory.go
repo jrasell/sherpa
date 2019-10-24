@@ -27,11 +27,25 @@ func NewStateBackend() scale.Backend {
 	}
 }
 
+func (s *StateBackend) GetLatestScalingEvents() (map[string]*state.ScalingEvent, error) {
+	s.RLock()
+	latest := s.state.LatestEvents
+	s.RUnlock()
+	return latest, nil
+}
+
+func (s *StateBackend) GetLatestScalingEvent(job, group string) (*state.ScalingEvent, error) {
+	s.RLock()
+	latest := s.state.LatestEvents[job+":"+group]
+	s.RUnlock()
+	return latest, nil
+}
+
 func (s *StateBackend) GetScalingEvents() (map[uuid.UUID]map[string]*state.ScalingEvent, error) {
 	s.RLock()
-	state := s.state.Events
+	events := s.state.Events
 	s.RUnlock()
-	return state, nil
+	return events, nil
 }
 
 func (s *StateBackend) PutScalingEvent(job string, event *state.ScalingEventMessage) error {

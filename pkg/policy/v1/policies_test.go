@@ -19,6 +19,7 @@ func Test_decodeGroupPolicyReqBodyAndValidate(t *testing.T) {
 				Enabled:                           true,
 				MaxCount:                          10,
 				MinCount:                          2,
+				Cooldown:                          180,
 				ScaleInCount:                      1,
 				ScaleOutCount:                     1,
 				ScaleInCPUPercentageThreshold:     20,

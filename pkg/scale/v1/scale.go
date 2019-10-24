@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/jrasell/sherpa/pkg/helper"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/jrasell/sherpa/pkg/state"
@@ -54,8 +55,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	newReq := &scale.GroupReq{Direction: scale.DirectionIn, GroupName: groupID}
+	newReq := &scale.GroupReq{Direction: scale.DirectionIn, GroupName: groupID, Time: helper.GenerateEventTimestamp()}
 
 	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
 		s.logger.Info().
@@ -80,6 +80,28 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newReq.GroupScalingPolicy = pol
+
+	if newReq.GroupScalingPolicy != nil {
+		cd, err := s.scaler.JobGroupIsInCooldown(jobID, groupID, pol.Cooldown, newReq.Time)
+		if err != nil {
+			s.logger.Error().
+				Err(err).
+				Str("job", jobID).
+				Str("group", groupID).
+				Msg("failed to check if job group is currently in scaling cooldown")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if cd {
+			s.logger.Info().
+				Str("job", jobID).
+				Str("group", groupID).
+				Msg(jobGroupInCooldownMsg)
+			http.Error(w, jobGroupInCooldownMsg, http.StatusConflict)
+			return
+		}
+	}
 
 	newReq.Count, err = payloadOrPolicyCount(getCountFromQueryParam(r), pol, scale.DirectionIn)
 	if err != nil {
@@ -138,8 +160,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	newReq := &scale.GroupReq{Direction: scale.DirectionOut, GroupName: groupID}
+	newReq := &scale.GroupReq{Direction: scale.DirectionOut, GroupName: groupID, Time: helper.GenerateEventTimestamp()}
 
 	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
 		s.logger.Info().
@@ -165,6 +186,28 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newReq.GroupScalingPolicy = pol
+
+	if newReq.GroupScalingPolicy != nil {
+		cd, err := s.scaler.JobGroupIsInCooldown(jobID, groupID, pol.Cooldown, newReq.Time)
+		if err != nil {
+			s.logger.Error().
+				Err(err).
+				Str("job", jobID).
+				Str("group", groupID).
+				Msg("failed to check if job group is currently in scaling cooldown")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if cd {
+			s.logger.Info().
+				Str("job", jobID).
+				Str("group", groupID).
+				Msg(jobGroupInCooldownMsg)
+			http.Error(w, jobGroupInCooldownMsg, http.StatusConflict)
+			return
+		}
+	}
 
 	newReq.Count, err = payloadOrPolicyCount(getCountFromQueryParam(r), pol, scale.DirectionIn)
 	if err != nil {
