@@ -3,6 +3,7 @@
 IMPROVEMENTS:
  * The web UI now includes the count and direction of scaling events [[GH-75]](https://github.com/jrasell/sherpa/pull/75)
  * Custom metadata can now be added to scaling events as string key/value pairs [[GH-75]](https://github.com/jrasell/sherpa/pull/74)
+ * Sherpa now supports specifying cooldowns within scaling policies. When attempting to perform a scaling activity, if the job group is in cooldown, the acitivty will be skipped [[GH-77]](https://github.com/jrasell/sherpa/pull/77)
  
 REFACTOR:
  * Fix incorrect variable name definition within policy meta [[GH-79]](https://github.com/jrasell/sherpa/pull/79)
