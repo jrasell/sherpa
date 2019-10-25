@@ -25,7 +25,7 @@ type Member struct { // nolint:maligned
 	stateLock sync.RWMutex
 	logger    zerolog.Logger
 
-	// clusterName
+	// clusterName represents the name of the cluster this Sherpa instance is a part of.
 	clusterName string
 
 	// standby is used to determine whether the Sherpa server in question is currently in standby

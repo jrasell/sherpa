@@ -22,9 +22,8 @@ func (m *Member) setupCluster() error {
 	// If existing state is found, check whether the operator passed cluster name matches the one
 	// found. If the passed one does not match the state, we will fail with an error.
 	if c.Name != "" && c.ID != uuid.Nil {
-		if err := m.verifyClusterName(c.Name); err != nil {
-			return err
-		}
+		m.logger.Debug().Msg("found existing Sherpa cluster state, verifying data")
+		return m.verifyClusterName(c.Name)
 	}
 
 	if err := m.generateClusterName(); err != nil {
@@ -49,7 +48,7 @@ func (m *Member) verifyClusterName(name string) error {
 		}
 	}
 
-	m.logger.Info().Msg("successfully found cluster state of existing cluster to join")
+	m.logger.Info().Msg("successfully verified state of existing cluster to join")
 	m.clusterName = name
 	return nil
 }
