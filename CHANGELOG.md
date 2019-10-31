@@ -7,6 +7,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
  * Fix a big where cluster state was being overwritten on server restart [[GH-83]](https://github.com/jrasell/sherpa/pull/83)
+ * Reorder autoscaling direction checks to ensure out actions take priority over in actions [[GH-84]](https://github.com/jrasell/sherpa/issues/84)
 
 REFACTOR:
  * Fix incorrect variable name definition within policy meta [[GH-79]](https://github.com/jrasell/sherpa/pull/79)
