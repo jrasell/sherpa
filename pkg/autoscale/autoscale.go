@@ -5,18 +5,20 @@ import (
 	"strconv"
 
 	nomad "github.com/hashicorp/nomad/api"
+	"github.com/jrasell/sherpa/pkg/helper"
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/jrasell/sherpa/pkg/state"
 )
 
 func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.GroupScalingPolicy, t int64) {
+
+	// Create a new logger with the job in the context.
+	jobLogger := helper.LoggerWithJobContext(a.logger, jobID)
+
 	resourceInfo, allocs, err := a.getJobAllocations(jobID, policies)
 	if err != nil {
-		a.logger.Error().
-			Err(err).
-			Str("job", jobID).
-			Msg("failed to gather allocation details for job")
+		jobLogger.Error().Err(err).Msg("failed to gather allocation details for job")
 		return
 	}
 
@@ -24,33 +26,30 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	// can exit here. It is worth logging this detail as exiting here could be because a policy is
 	// missing or has a typo within it.
 	if len(allocs) < 1 {
-		a.logger.Debug().Str("job", jobID).Msg("no task groups in job have scaling policies enabled")
+		jobLogger.Debug().Msg("no task groups in job have scaling policies enabled")
 		return
 	}
 
 	resourceUsage, err := a.getJobResourceUsage(allocs)
 	if err != nil {
-		a.logger.Error().
-			Err(err).
-			Str("job", jobID).
-			Msg("failed to gather job resource usage statistics")
+		jobLogger.Error().Err(err).Msg("failed to gather job resource usage statistics")
 		return
 	}
 
-	var scaleReq []*scale.GroupReq
+	var scaleReq []*scale.GroupReq // nolint:prealloc
 	meta := make(map[string]string)
 
 	for group, pol := range policies {
+
+		// Create a new logger with the group in the context from the job logger.
+		groupLogger := helper.LoggerWithGroupContext(jobLogger, group)
 
 		// It is possible a scaling policy is configured for a job group, but the actual running
 		// Nomad job doesn't have this job group configured. If this is the case, we should warn
 		// the user in the logs and break the current loop.
 		if _, ok := resourceUsage[group]; !ok {
-			a.logger.Warn().
-				Str("job", jobID).
-				Str("group", group).
-				Msg("job group found in policy but not found in Nomad job")
-			break
+			groupLogger.Warn().Msg("job group found in policy but not found in Nomad job")
+			continue
 		}
 
 		// Maths. Find the current CPU and memory utilisation in percentage based on the total
@@ -58,50 +57,45 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		// resource stanza.
 		cpuUsage := resourceUsage[group].cpu * 100 / resourceInfo[group].cpu
 		memUsage := resourceUsage[group].mem * 100 / resourceInfo[group].mem
-		a.logger.Debug().
-			Str("job", jobID).
-			Str("group", group).
+		groupLogger.Debug().
 			Int("mem-usage-percentage", memUsage).
 			Int("cpu-usage-percentage", cpuUsage).
 			Msg("resource utilisation calculation")
 
-		var scalingDir scale.Direction
-		var count int
+		decision := calculateScalingDecision(&scalingCheckParams{
+			resourceUsage: &scalingMetrics{cpu: cpuUsage, memory: memUsage},
+			logger:        groupLogger,
+			policy:        pol,
+		})
 
-		switch {
-		case cpuUsage > pol.ScaleOutCPUPercentageThreshold:
-			scalingDir = scale.DirectionOut
-			count = pol.ScaleOutCount
-			updateAutoscaleMeta(group, "cpu", cpuUsage, pol.ScaleOutCPUPercentageThreshold, meta)
-		case memUsage > pol.ScaleOutMemoryPercentageThreshold:
-			scalingDir = scale.DirectionOut
-			count = pol.ScaleOutCount
-			updateAutoscaleMeta(group, "memory", memUsage, pol.ScaleOutMemoryPercentageThreshold, meta)
-		case cpuUsage < pol.ScaleInCPUPercentageThreshold:
-			scalingDir = scale.DirectionIn
-			count = pol.ScaleInCount
-			updateAutoscaleMeta(group, "cpu", cpuUsage, pol.ScaleInCPUPercentageThreshold, meta)
-		case memUsage < pol.ScaleInMemoryPercentageThreshold:
-			scalingDir = scale.DirectionIn
-			count = pol.ScaleInCount
-			updateAutoscaleMeta(group, "memory", memUsage, pol.ScaleInMemoryPercentageThreshold, meta)
+		// Exit if no scaling is required.
+		if decision == nil {
+			groupLogger.Debug().Msg("no scaling required")
+			continue
+		}
+		groupLogger.Debug().
+			Object("decision", decision).
+			Msg("scaling decision made and action required")
+
+		// Iterate over the resource metrics which have broken their thresholds and ensure these
+		// are added to the submission meta.
+		for name, metric := range decision.metrics {
+			updateAutoscaleMeta(group, name, metric.usage, metric.threshold, meta)
 		}
 
-		if scalingDir != "" {
-			req := &scale.GroupReq{
-				Direction:          scalingDir,
-				Count:              count,
-				GroupName:          group,
-				GroupScalingPolicy: pol,
-				Time:               t,
-			}
-			scaleReq = append(scaleReq, req)
-
-			a.logger.Debug().
-				Str("job", jobID).
-				Object("scaling-req", req).
-				Msg("added group scaling request")
+		// Build the job group scaling request.
+		req := &scale.GroupReq{
+			Direction:          decision.direction,
+			Count:              decision.count,
+			GroupName:          group,
+			GroupScalingPolicy: pol,
+			Time:               t,
 		}
+		scaleReq = append(scaleReq, req)
+
+		groupLogger.Debug().
+			Object("scaling-req", req).
+			Msg("added group scaling request")
 	}
 
 	// If group scaling requests have been added to the array for the job that is currently being
@@ -109,12 +103,11 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	if len(scaleReq) > 0 {
 		resp, _, err := a.scaler.Trigger(jobID, scaleReq, state.SourceInternalAutoscaler, meta)
 		if err != nil {
-			a.logger.Error().Str("job", jobID).Err(err).Msg("failed to trigger scaling of job")
+			jobLogger.Error().Err(err).Msg("failed to trigger scaling of job")
 		}
 
 		if resp != nil {
-			a.logger.Info().
-				Str("job", jobID).
+			jobLogger.Info().
 				Str("id", resp.ID.String()).
 				Str("evaluation-id", resp.EvaluationID).
 				Msg("successfully triggered autoscaling of job")
@@ -186,7 +179,7 @@ func updateResourceTracker(group string, cpu, mem int, tracker map[string]*scala
 	tracker[group] = &scalableResources{cpu: cpu, mem: mem}
 }
 
-// updateAutoscaleMeta populates meta with the metrics used to autoscale a job group
+// updateAutoscaleMeta populates meta with the metrics used to autoscale a job group.
 func updateAutoscaleMeta(group, metricType string, value, threshold int, meta map[string]string) {
 	key := fmt.Sprintf("group-%s-metric", group)
 	meta[key+"-type"] = metricType

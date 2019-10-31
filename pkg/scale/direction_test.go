@@ -13,6 +13,7 @@ func TestDirection_String(t *testing.T) {
 	}{
 		{direction: DirectionOut, expectedResp: "out"},
 		{direction: DirectionIn, expectedResp: "in"},
+		{direction: DirectionNone, expectedResp: "none"},
 	}
 
 	for _, tc := range testCases {
