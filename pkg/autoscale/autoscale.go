@@ -69,14 +69,6 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		var count int
 
 		switch {
-		case cpuUsage < pol.ScaleInCPUPercentageThreshold:
-			scalingDir = scale.DirectionIn
-			count = pol.ScaleInCount
-			updateAutoscaleMeta(group, "cpu", cpuUsage, pol.ScaleInCPUPercentageThreshold, meta)
-		case memUsage < pol.ScaleInMemoryPercentageThreshold:
-			scalingDir = scale.DirectionIn
-			count = pol.ScaleInCount
-			updateAutoscaleMeta(group, "memory", memUsage, pol.ScaleInMemoryPercentageThreshold, meta)
 		case cpuUsage > pol.ScaleOutCPUPercentageThreshold:
 			scalingDir = scale.DirectionOut
 			count = pol.ScaleOutCount
@@ -85,6 +77,14 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 			scalingDir = scale.DirectionOut
 			count = pol.ScaleOutCount
 			updateAutoscaleMeta(group, "memory", memUsage, pol.ScaleOutMemoryPercentageThreshold, meta)
+		case cpuUsage < pol.ScaleInCPUPercentageThreshold:
+			scalingDir = scale.DirectionIn
+			count = pol.ScaleInCount
+			updateAutoscaleMeta(group, "cpu", cpuUsage, pol.ScaleInCPUPercentageThreshold, meta)
+		case memUsage < pol.ScaleInMemoryPercentageThreshold:
+			scalingDir = scale.DirectionIn
+			count = pol.ScaleInCount
+			updateAutoscaleMeta(group, "memory", memUsage, pol.ScaleInMemoryPercentageThreshold, meta)
 		}
 
 		if scalingDir != "" {
