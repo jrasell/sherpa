@@ -1,7 +1,6 @@
 package autoscale
 
 import (
-	"fmt"
 	"strconv"
 
 	nomad "github.com/hashicorp/nomad/api"
@@ -181,8 +180,7 @@ func updateResourceTracker(group string, cpu, mem int, tracker map[string]*scala
 
 // updateAutoscaleMeta populates meta with the metrics used to autoscale a job group.
 func updateAutoscaleMeta(group, metricType string, value, threshold int, meta map[string]string) {
-	key := fmt.Sprintf("group-%s-metric", group)
-	meta[key+"-type"] = metricType
+	key := group + "-" + metricType
 	meta[key+"-value"] = strconv.Itoa(value)
 	meta[key+"-threshold"] = strconv.Itoa(threshold)
 }
