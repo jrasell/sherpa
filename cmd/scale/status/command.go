@@ -3,6 +3,7 @@ package status
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jrasell/sherpa/cmd/helper"
 
@@ -14,7 +15,7 @@ import (
 
 const (
 	listOutputHeader = "ID|Job:Group|Status|Time"
-	infoOutputHeader = "Job:Group|ChangeCount|Direction"
+	infoOutputHeader = "Job:Group|ChangeCount|Direction|Meta"
 )
 
 func RegisterCommand(rootCmd *cobra.Command) error {
@@ -86,7 +87,8 @@ func runInfo(c *api.Client, id string) int {
 
 	events := []string{infoOutputHeader}
 	for jobGroup, event := range resp {
-		events = append(events, fmt.Sprintf("%s|%v|%v", jobGroup, event.Details.Count, event.Details.Direction))
+		events = append(events, fmt.Sprintf("%s|%v|%v|%s",
+			jobGroup, event.Details.Count, event.Details.Direction, strings.Join(metaToStrings(event.Meta), ",")))
 
 		if len(header) == 0 {
 			header = []string{
@@ -104,4 +106,12 @@ func runInfo(c *api.Client, id string) int {
 	fmt.Println(helper.FormatList(events))
 
 	return sysexits.OK
+}
+
+func metaToStrings(meta map[string]string) []string {
+	out := []string{}
+	for k, v := range meta {
+		out = append(out, k+"="+v)
+	}
+	return out
 }
