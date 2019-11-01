@@ -55,7 +55,12 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	newReq := &scale.GroupReq{Direction: scale.DirectionIn, GroupName: groupID, Time: helper.GenerateEventTimestamp()}
+	newReq := &scale.GroupReq{
+		Direction: scale.DirectionIn,
+		GroupName: groupID,
+		Time:      helper.GenerateEventTimestamp(),
+		Meta:      body.Meta,
+	}
 
 	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
 		s.logger.Info().
@@ -114,7 +119,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI, body.Meta)
+	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI)
 	if err != nil {
 		s.logger.Error().
 			Err(err).
@@ -160,7 +165,12 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	newReq := &scale.GroupReq{Direction: scale.DirectionOut, GroupName: groupID, Time: helper.GenerateEventTimestamp()}
+	newReq := &scale.GroupReq{
+		Direction: scale.DirectionOut,
+		GroupName: groupID,
+		Time:      helper.GenerateEventTimestamp(),
+		Meta:      body.Meta,
+	}
 
 	if s.scaler.JobGroupIsDeploying(jobID, groupID) {
 		s.logger.Info().
@@ -220,7 +230,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI, body.Meta)
+	scaleResp, respCode, err := s.scaler.Trigger(jobID, []*scale.GroupReq{newReq}, state.SourceAPI)
 	if err != nil {
 		s.logger.Error().
 			Err(err).
