@@ -36,7 +36,6 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	}
 
 	var scaleReq []*scale.GroupReq // nolint:prealloc
-	meta := make(map[string]string)
 
 	for group, pol := range policies {
 
@@ -72,12 +71,14 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 			groupLogger.Debug().Msg("no scaling required")
 			continue
 		}
-		groupLogger.Debug().
+		groupLogger.Info().
 			Object("decision", decision).
 			Msg("scaling decision made and action required")
 
 		// Iterate over the resource metrics which have broken their thresholds and ensure these
 		// are added to the submission meta.
+		meta := make(map[string]string)
+
 		for name, metric := range decision.metrics {
 			updateAutoscaleMeta(group, name, metric.usage, metric.threshold, meta)
 		}
@@ -100,7 +101,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	// If group scaling requests have been added to the array for the job that is currently being
 	// checked, trigger a scaling event.
 	if len(scaleReq) > 0 {
-		resp, _, err := a.scaler.Trigger(jobID, scaleReq, state.SourceInternalAutoscaler, meta)
+		resp, _, err := a.scaler.Trigger(jobID, scaleReq, state.SourceInternalAutoscaler)
 		if err != nil {
 			jobLogger.Error().Err(err).Msg("failed to trigger scaling of job")
 		}

@@ -10,7 +10,7 @@ import (
 // Scale is the interface used for scaling a Nomad job.
 type Scale interface {
 	// Trigger performs scaling of 1 or more job groups which belong to the same job.
-	Trigger(string, []*GroupReq, state.Source, map[string]string) (*ScalingResponse, int, error)
+	Trigger(string, []*GroupReq, state.Source) (*ScalingResponse, int, error)
 
 	// GetDeploymentChannel is used to return the channel where updates to Nomad deployments should
 	// be sent.
@@ -57,6 +57,10 @@ type GroupReq struct {
 	// triggered. This is to help coordinate with checks such as cooldown and ensure a single time
 	// can be used.
 	Time int64
+
+	// Meta is the meta data which is optionally submitted when requesting a scaling activity for a
+	// job group. This is free-form and can contain any information the user deems relevant.
+	Meta map[string]string
 }
 
 type ScalingResponse struct {
