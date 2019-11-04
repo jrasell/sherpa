@@ -4,14 +4,14 @@ The scale command groups subcommands for actioning and detailing scaling request
 
 ## Examples
 
-Scale out job `example` and group `cache` by a count of `2`:
+Scale out job `example` and group `cache` by a count of `2` setting some meta params:
 ```bash
-$ sherpa scale out --group-name=cache --count=2 example
+$ sherpa scale out --group-name=cache --count=2 -meta=reason=jrasell-manual example
 ```
 
 Scale in job `example` and group `cache` using the count configured in the scaling policy:
 ```bash
-$ sherpa scale in --group-name=cache example
+$ sherpa scale in --group-name=cache example -meta=reason=jrasell-manual
 ```
 
 List all the scaling events currently held with the Sherpa storage backend:
