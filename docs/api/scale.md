@@ -14,6 +14,15 @@ This endpoint can be used to scale a Nomad job group out, therefore increasing i
 * `:group` (string: required) - Specifies the group name within the job and is specified as part of the path.
 * `count` (int: 0) - Specifies the count which to scale the job group by. If this is not passed, Sherpa will attempt to use the value within the scaling policy.
 
+#### Sample Payload
+```json
+{
+  "Meta": {
+    "foo": "bar"
+  }
+}
+```
+
 ### Sample Request
 
 ```
@@ -45,6 +54,15 @@ This endpoint can be used to scale a Nomad job group in, therefore decreasing it
 * `:job_id` (string: required) - Specifies the ID of the job and is specified as part of the path.
 * `:group` (string: required) - Specifies the group name within the job and is specified as part of the path.
 * `count` (int: 0) - Specifies the count which to scale the job group by. If this is not passed, Sherpa will attempt to use the value detailed within the scaling policy.
+
+#### Sample Payload
+```json
+{
+  "Meta": {
+    "foo": "bar"
+  }
+}
+```
 
 ### Sample Request
 
@@ -93,6 +111,9 @@ $ curl \
       "Details": {
         "Count": 1,
         "Direction": "in"
+      },
+      "Meta": {
+        "foo": "bar"
       }
     }
   },
@@ -105,6 +126,9 @@ $ curl \
       "Details": {
         "Count": 1,
         "Direction": "in"
+      },
+      "Meta": {
+        "foo": "bar"
       }
     }
   }
@@ -138,6 +162,9 @@ $ curl \
     "Details": {
       "Count": 1,
       "Direction": "in"
+    },
+    "Meta": {
+      "foo": "bar"
     }
   }
 }
