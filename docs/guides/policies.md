@@ -4,6 +4,7 @@ Scaling policies allow for the tight and close control of scaling for Nomad job 
 * `Enabled` (bool: false) - Whether the job group is enabled for scaling to take place, used in strict checking.
 * `MinCount` (int: 2) - The minimum job group count which should be running, used in strict checking.
 * `MaxCount` (int: 10)  - The maximum job group count which should be running, used in strict checking.
+* `Cooldown` (int: 180) - Cooldown is a time period in seconds. Once a scaling action has been triggered on the desired group, another action will not be triggered until the cooldown period has passed.
 * `ScaleInCount` (int: 1) - The number by which to decrement the job group count by when performing a scaling in action.
 * `ScaleOutCount` (int: 1) - The number by which to increment the job group count by when performing a scaling in action.
 * `ScaleOutCPUPercentageThreshold` (int: 80) - The CPU usage threshold in percent that will trigger an auto-scaling out event.
@@ -38,6 +39,7 @@ It is also possible to write a policy which represents many job groups which are
   "cache": {
     "Enabled": true,
     "MaxCount": 20,
+    "Cooldown": 300,
     "MinCount": 10,
     "ScaleOutCount": 3,
     "ScaleInCount": 1,
@@ -50,6 +52,7 @@ It is also possible to write a policy which represents many job groups which are
     "Enabled": true,
     "MaxCount": 5,
     "MinCount": 2,
+    "Cooldown": 300,
     "ScaleOutCount": 2,
     "ScaleInCount": 2,
     "ScaleOutCPUPercentageThreshold": 85,
