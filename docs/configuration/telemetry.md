@@ -76,3 +76,58 @@ Runtime metrics allow operators to get insight into how the Sherpa server proces
     <td>Gauge</td>
   </tr>
 </table>
+
+# Autoscale Metrics
+
+Autoscale metrics allow operators to get insight into how the autoscaler is functioning.
+
+<table class="table table-bordered table-striped">
+  <tr>
+    <th>Metric</th>
+    <th>Description</th>
+    <th>Unit</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.{job}.evaluation`</td>
+    <td>The time taken to perform the autoscaling evaluation for the job named {job}</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.evaluation.error`</td>
+    <td>Number of autoscaling evaluation errors across all jobs</td>
+    <td>Number of errors</td>
+    <td>Counter</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.{job}.evaluation.error`</td>
+    <td>Number of autoscaling evaluation errors for the job named {job}</td>
+    <td>Number of errors</td>
+    <td>Counter</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.trigger.error`</td>
+    <td>Number of autoscaling scale trigger errors across all jobs</td>
+    <td>Number of errors</td>
+    <td>Counter</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.{job}.trigger.error`</td>
+    <td>Number of autoscaling scale trigger errors for the job named {job}</td>
+    <td>Number of errors</td>
+    <td>Counter</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.trigger.success`</td>
+    <td>Number of autoscaling scale trigger successes across all jobs</td>
+    <td>Number of successes</td>
+    <td>Counter</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.{job}.trigger.success`</td>
+    <td>Number of autoscaling scale trigger successes for the job named {job}</td>
+    <td>Number of successes</td>
+    <td>Counter</td>
+  </tr>
+</table>
