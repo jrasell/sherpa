@@ -1,4 +1,4 @@
-## 0.3.0 (Unreleased)
+## 0.3.0 (4 November, 2019)
 
 IMPROVEMENTS:
  * The web UI now includes the count and direction of scaling events [[GH-75]](https://github.com/jrasell/sherpa/pull/75)
