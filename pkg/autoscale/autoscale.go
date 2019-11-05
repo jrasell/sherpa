@@ -2,7 +2,9 @@ package autoscale
 
 import (
 	"strconv"
+	"time"
 
+	"github.com/armon/go-metrics"
 	nomad "github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/helper"
 	"github.com/jrasell/sherpa/pkg/policy"
@@ -11,6 +13,7 @@ import (
 )
 
 func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.GroupScalingPolicy, t int64) {
+	defer metrics.MeasureSince([]string{"autoscale", jobID, "evaluation"}, time.Now())
 
 	// Create a new logger with the job in the context.
 	jobLogger := helper.LoggerWithJobContext(a.logger, jobID)
@@ -18,6 +21,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	resourceInfo, allocs, err := a.getJobAllocations(jobID, policies)
 	if err != nil {
 		jobLogger.Error().Err(err).Msg("failed to gather allocation details for job")
+		sendEvaluationErrorMetrics(jobID)
 		return
 	}
 
@@ -32,6 +36,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 	resourceUsage, err := a.getJobResourceUsage(allocs)
 	if err != nil {
 		jobLogger.Error().Err(err).Msg("failed to gather job resource usage statistics")
+		sendEvaluationErrorMetrics(jobID)
 		return
 	}
 
@@ -104,6 +109,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 		resp, _, err := a.scaler.Trigger(jobID, scaleReq, state.SourceInternalAutoscaler)
 		if err != nil {
 			jobLogger.Error().Err(err).Msg("failed to trigger scaling of job")
+			sendTriggerErrorMetrics(jobID)
 		}
 
 		if resp != nil {
@@ -111,6 +117,7 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 				Str("id", resp.ID.String()).
 				Str("evaluation-id", resp.EvaluationID).
 				Msg("successfully triggered autoscaling of job")
+			sendTriggerSuccessMetrics(jobID)
 		}
 	}
 }
