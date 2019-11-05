@@ -25,7 +25,7 @@ const (
 	defaultStorageBackendConsul = "Consul"
 )
 
-type System struct {
+type SystemServer struct {
 	logger    zerolog.Logger
 	member    *cluster.Member
 	nomad     *api.Client
@@ -55,8 +55,8 @@ type SystemLeaderResp struct {
 	LeaderClusterAddress string
 }
 
-func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Config, tel *metrics.InmemSink, mem *cluster.Member) *System {
-	return &System{
+func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Config, tel *metrics.InmemSink, mem *cluster.Member) *SystemServer {
+	return &SystemServer{
 		logger:    l,
 		member:    mem,
 		nomad:     nomad,
@@ -65,34 +65,34 @@ func NewSystemServer(l zerolog.Logger, nomad *api.Client, server *serverCfg.Conf
 	}
 }
 
-func (h *System) GetHealth(w http.ResponseWriter, r *http.Request) {
+func (s *SystemServer) GetHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, []byte(defaultHealthResp))
 }
 
-func (h *System) GetInfo(w http.ResponseWriter, r *http.Request) {
+func (s *SystemServer) GetInfo(w http.ResponseWriter, r *http.Request) {
 	resp := &SystemInfoResp{
-		NomadAddress:              h.nomad.Address(),
-		StrictPolicyChecking:      h.server.StrictPolicyChecking,
-		InternalAutoScalingEngine: h.server.InternalAutoScaler,
+		NomadAddress:              s.nomad.Address(),
+		StrictPolicyChecking:      s.server.StrictPolicyChecking,
+		InternalAutoScalingEngine: s.server.InternalAutoScaler,
 		PolicyEngine:              defaultDisabledPolicyResp,
 		StorageBackend:            defaultStorageBackend,
 	}
 
-	if h.server.ConsulStorageBackend {
+	if s.server.ConsulStorageBackend {
 		resp.StorageBackend = defaultStorageBackendConsul
 	}
 
-	if h.server.APIPolicyEngine {
+	if s.server.APIPolicyEngine {
 		resp.PolicyEngine = defaultAPIPolicyResp
 	}
 
-	if h.server.NomadMetaPolicyEngine {
+	if s.server.NomadMetaPolicyEngine {
 		resp.PolicyEngine = defaultMetaPolicyResp
 	}
 
 	out, err := json.Marshal(resp)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to marshal HTTP response")
+		s.logger.Error().Err(err).Msg("failed to marshal HTTP response")
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
@@ -100,26 +100,26 @@ func (h *System) GetInfo(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, out)
 }
 
-func (h *System) GetLeader(w http.ResponseWriter, r *http.Request) {
+func (s *SystemServer) GetLeader(w http.ResponseWriter, r *http.Request) {
 
 	// Pull the leadership information from the local member.
-	l, addr, advAddr, err := h.member.Leader()
+	l, addr, advAddr, err := s.member.Leader()
 	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to get leadership information")
+		s.logger.Error().Err(err).Msg("failed to get leadership information")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	resp := SystemLeaderResp{
 		IsSelf:               l,
-		HAEnabled:            h.member.IsHA(),
+		HAEnabled:            s.member.IsHA(),
 		LeaderAddress:        addr,
 		LeaderClusterAddress: advAddr,
 	}
 
 	out, err := json.Marshal(resp)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to marshal HTTP response")
+		s.logger.Error().Err(err).Msg("failed to marshal HTTP response")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -127,17 +127,17 @@ func (h *System) GetLeader(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, out)
 }
 
-func (h *System) GetMetrics(w http.ResponseWriter, r *http.Request) {
-	metricData, err := h.telemetry.DisplayMetrics(w, r)
+func (s *SystemServer) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	metricData, err := s.telemetry.DisplayMetrics(w, r)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to get latest telemetry data")
+		s.logger.Error().Err(err).Msg("failed to get latest telemetry data")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	out, err := json.Marshal(metricData)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to marshal HTTP response")
+		s.logger.Error().Err(err).Msg("failed to marshal HTTP response")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
