@@ -3,12 +3,15 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	metrics "github.com/armon/go-metrics"
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/nomad/api"
 	serverCfg "github.com/jrasell/sherpa/pkg/config/server"
 	"github.com/jrasell/sherpa/pkg/server/cluster"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -23,6 +26,11 @@ const (
 	defaultDisabledPolicyResp   = "Disabled"
 	defaultStorageBackend       = "In Memory"
 	defaultStorageBackendConsul = "Consul"
+)
+
+var (
+	promHandler http.Handler
+	promOnce    sync.Once
 )
 
 type SystemServer struct {
@@ -128,6 +136,11 @@ func (s *SystemServer) GetLeader(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SystemServer) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	if format := r.URL.Query().Get("format"); format == "prometheus" {
+		s.prometheusHandler().ServeHTTP(w, r)
+		return
+	}
+
 	metricData, err := s.telemetry.DisplayMetrics(w, r)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to get latest telemetry data")
@@ -143,6 +156,17 @@ func (s *SystemServer) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSONResponse(w, out)
+}
+
+func (s *SystemServer) prometheusHandler() http.Handler {
+	promOnce.Do(func() {
+		handlerOptions := promhttp.HandlerOpts{
+			ErrorHandling:      promhttp.ContinueOnError,
+			DisableCompression: true,
+		}
+		promHandler = promhttp.HandlerFor(prometheus.DefaultGatherer, handlerOptions)
+	})
+	return promHandler
 }
 
 func writeJSONResponse(w http.ResponseWriter, bytes []byte) {

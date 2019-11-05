@@ -4,6 +4,7 @@ import (
 	"time"
 
 	metrics "github.com/armon/go-metrics"
+	"github.com/armon/go-metrics/prometheus"
 	"github.com/jrasell/sherpa/pkg/build"
 )
 
@@ -32,6 +33,15 @@ func (h *HTTPServer) setupTelemetry() error {
 			return err
 		}
 		fanout = append(fanout, sink)
+	}
+
+	// Configure prometheus formatted metrics.
+	if h.cfg.Telemetry.Prometheus {
+		promSink, err := prometheus.NewPrometheusSink()
+		if err != nil {
+			return err
+		}
+		fanout = append(fanout, promSink)
 	}
 
 	// Initialize the global sink

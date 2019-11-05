@@ -9,10 +9,12 @@ import (
 const (
 	configKeyTelemetryStatsiteAddress = "telemetry-statsite-address"
 	configKeyTelemetryStatsdAddress   = "telemetry-statsd-address"
+	configKeyTelemetryPrometheus      = "telemetry-prometheus"
 )
 
 // TelemetryConfig is the server Telemetry configuration struct.
 type TelemetryConfig struct {
+	Prometheus   bool
 	StatsiteAddr string
 	StatsdAddr   string
 }
@@ -21,7 +23,8 @@ type TelemetryConfig struct {
 // object.
 func (c *TelemetryConfig) MarshalZerologObject(e *zerolog.Event) {
 	e.Str(configKeyTelemetryStatsiteAddress, c.StatsiteAddr).
-		Str(configKeyTelemetryStatsdAddress, c.StatsdAddr)
+		Str(configKeyTelemetryStatsdAddress, c.StatsdAddr).
+		Bool(configKeyTelemetryPrometheus, c.Prometheus)
 }
 
 // GetTelemetryConfig hydrates the telemetry config struct.
@@ -29,6 +32,7 @@ func GetTelemetryConfig() TelemetryConfig {
 	return TelemetryConfig{
 		StatsiteAddr: viper.GetString(configKeyTelemetryStatsiteAddress),
 		StatsdAddr:   viper.GetString(configKeyTelemetryStatsdAddress),
+		Prometheus:   viper.GetBool(configKeyTelemetryPrometheus),
 	}
 }
 
@@ -59,6 +63,19 @@ func RegisterTelemetryConfig(cmd *cobra.Command) {
 		)
 
 		flags.String(longOpt, defaultValue, description)
+		_ = viper.BindPFlag(key, flags.Lookup(longOpt))
+		viper.SetDefault(key, defaultValue)
+	}
+
+	{
+		const (
+			key          = configKeyTelemetryPrometheus
+			longOpt      = "telemetry-prometheus"
+			defaultValue = false
+			description  = "Specifies whether Prometheus formatted metrics are available"
+		)
+
+		flags.Bool(longOpt, defaultValue, description)
 		_ = viper.BindPFlag(key, flags.Lookup(longOpt))
 		viper.SetDefault(key, defaultValue)
 	}
