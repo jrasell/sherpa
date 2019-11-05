@@ -173,3 +173,89 @@ Policy backend metrics allow operators to get insight into how the policy storag
     <td>Summary</td>
   </tr>
 </table>
+
+
+# Scaling State Backend Metrics
+
+Scaling state backend metrics allow operators to get insight into how the scaling state backend is functioning.
+
+<table class="table table-bordered table-striped">
+  <tr>
+    <th>Metric</th>
+    <th>Description</th>
+    <th>Unit</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.memory.get_events`</td>
+    <td>Time taken to list all stored scaling activities from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.memory.get_event`</td>
+    <td>Time taken to get a stored scaling activity from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.memory.get_latest_events`</td>
+    <td>Time taken to list the latest stored scaling activities from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.memory.get_latest_event`</td>
+    <td>Time taken to get the latest scaling activity for a job group from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.memory.put_event`</td>
+    <td>Time taken to put a scaling activity in the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.memory.gc`</td>
+    <td>Time taken to run the scaling state garbage collector for the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.consul.get_events`</td>
+    <td>Time taken to list all stored scaling activities from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.consul.get_event`</td>
+    <td>Time taken to get a stored scaling activity from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.consul.get_latest_events`</td>
+    <td>Time taken to list the latest stored scaling activities from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.consul.get_latest_event`</td>
+    <td>Time taken to get the latest scaling activity for a job group from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.consul.put_event`</td>
+    <td>Time taken to put a scaling activity in the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.scale.state.consul.gc`</td>
+    <td>Time taken to run the scaling state garbage collector for the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+</table>
