@@ -3,7 +3,9 @@ package consul
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
+	"github.com/armon/go-metrics"
 	"github.com/hashicorp/consul/api"
 	"github.com/jrasell/sherpa/pkg/client"
 	"github.com/jrasell/sherpa/pkg/policy"
@@ -16,6 +18,17 @@ var _ backend.PolicyBackend = (*PolicyBackend)(nil)
 
 const (
 	baseKVPath = "policies/"
+)
+
+// Define our metric keys.
+var (
+	metricKeyGetPolicies          = []string{"policy", "consul", "get_policies"}
+	metricKeyGetJobPolicy         = []string{"policy", "consul", "get_job_policy"}
+	metricKeyGetJobGroupPolicy    = []string{"policy", "consul", "get_job_group_policy"}
+	metricKeyPutJobPolicy         = []string{"policy", "consul", "put_job_policy"}
+	metricKeyPutJobGroupPolicy    = []string{"policy", "consul", "put_job_group_policy"}
+	metricKeyDeleteJobPolicy      = []string{"policy", "consul", "delete_job_policy"}
+	metricKeyDeleteJobGroupPolicy = []string{"policy", "consul", "delete_job_group_policy"}
 )
 
 type PolicyBackend struct {
@@ -36,6 +49,8 @@ func NewConsulPolicyBackend(log zerolog.Logger, path string) backend.PolicyBacke
 }
 
 func (p *PolicyBackend) GetPolicies() (map[string]map[string]*policy.GroupScalingPolicy, error) {
+	defer metrics.MeasureSince(metricKeyGetPolicies, time.Now())
+
 	kv, _, err := p.kv.List(p.path, nil)
 	if err != nil {
 		return nil, err
@@ -69,6 +84,8 @@ func (p *PolicyBackend) GetPolicies() (map[string]map[string]*policy.GroupScalin
 }
 
 func (p *PolicyBackend) GetJobPolicy(job string) (map[string]*policy.GroupScalingPolicy, error) {
+	defer metrics.MeasureSince(metricKeyGetJobPolicy, time.Now())
+
 	kv, _, err := p.kv.List(p.path+job, nil)
 	if err != nil {
 		return nil, err
@@ -96,6 +113,8 @@ func (p *PolicyBackend) GetJobPolicy(job string) (map[string]*policy.GroupScalin
 }
 
 func (p *PolicyBackend) GetJobGroupPolicy(job, group string) (*policy.GroupScalingPolicy, error) {
+	defer metrics.MeasureSince(metricKeyGetJobGroupPolicy, time.Now())
+
 	kv, _, err := p.kv.Get(p.path+job+"/"+group, nil)
 	if err != nil {
 		return nil, err
@@ -115,6 +134,8 @@ func (p *PolicyBackend) GetJobGroupPolicy(job, group string) (*policy.GroupScali
 }
 
 func (p *PolicyBackend) PutJobPolicy(job string, groupPolicies map[string]*policy.GroupScalingPolicy) error {
+	defer metrics.MeasureSince(metricKeyPutJobPolicy, time.Now())
+
 	var kvOpts []*api.KVTxnOp // nolint:prealloc
 
 	for group, pol := range groupPolicies {
@@ -145,6 +166,8 @@ func (p *PolicyBackend) PutJobPolicy(job string, groupPolicies map[string]*polic
 }
 
 func (p *PolicyBackend) PutJobGroupPolicy(job, group string, pol *policy.GroupScalingPolicy) error {
+	defer metrics.MeasureSince(metricKeyPutJobGroupPolicy, time.Now())
+
 	marshal, err := json.Marshal(pol)
 	if err != nil {
 		return err
@@ -160,11 +183,15 @@ func (p *PolicyBackend) PutJobGroupPolicy(job, group string, pol *policy.GroupSc
 }
 
 func (p *PolicyBackend) DeleteJobPolicy(job string) error {
+	defer metrics.MeasureSince(metricKeyDeleteJobPolicy, time.Now())
+
 	_, err := p.kv.DeleteTree(p.path+job, nil)
 	return err
 }
 
 func (p *PolicyBackend) DeleteJobGroupPolicy(job, group string) error {
+	defer metrics.MeasureSince(metricKeyDeleteJobGroupPolicy, time.Now())
+
 	_, err := p.kv.Delete(p.path+job+"/"+group, nil)
 	return err
 }

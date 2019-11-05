@@ -77,6 +77,104 @@ Runtime metrics allow operators to get insight into how the Sherpa server proces
   </tr>
 </table>
 
+# Policy Backend Metrics
+
+Policy backend metrics allow operators to get insight into how the policy storage backend is functioning.
+
+<table class="table table-bordered table-striped">
+  <tr>
+    <th>Metric</th>
+    <th>Description</th>
+    <th>Unit</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.get_policies`</td>
+    <td>Time taken to list all stored scaling policies from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.get_job_policy`</td>
+    <td>Time taken to get a job scaling policy from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.get_job_group_policy`</td>
+    <td>Time taken to get a job group scaling policy from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.put_job_policy`</td>
+    <td>Time taken to put a job scaling policy in the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.put_job_group_policy`</td>
+    <td>Time taken to put a job group scaling policy in the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.delete_job_policy`</td>
+    <td>Time taken to delete a job scaling policy from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.memory.delete_job_group_policy`</td>
+    <td>Time taken to delete a job group scaling policy from the memory backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.get_policies`</td>
+    <td>Time taken to list all stored scaling policies from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.get_job_policy`</td>
+    <td>Time taken to get a job scaling policy from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.get_job_group_policy`</td>
+    <td>Time taken to get a job group scaling policy from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.put_job_policy`</td>
+    <td>Time taken to put a job scaling policy in the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.put_job_group_policy`</td>
+    <td>Time taken to put a job group scaling policy in the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.delete_job_policy`</td>
+    <td>Time taken to delete a job scaling policy from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.policy.consul.delete_job_group_policy`</td>
+    <td>Time taken to delete a job group scaling policy from the Consul backend</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+</table>
+
+
 # Scaling State Backend Metrics
 
 Scaling state backend metrics allow operators to get insight into how the scaling state backend is functioning.
