@@ -1,3 +1,8 @@
+## 0.4.0 (Unreleased)
+
+IMPROVEMENTS:
+ * Metrics to measure policy backend request latencies [[GH-93]](https://github.com/jrasell/sherpa/pull/93)
+
 ## 0.3.0 (4 November, 2019)
 
 IMPROVEMENTS:
