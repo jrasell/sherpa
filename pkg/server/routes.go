@@ -7,11 +7,10 @@ import (
 	scaleV1 "github.com/jrasell/sherpa/pkg/scale/v1"
 	v1 "github.com/jrasell/sherpa/pkg/server/endpoints/v1"
 	"github.com/jrasell/sherpa/pkg/server/router"
-	systemV1 "github.com/jrasell/sherpa/pkg/system/v1"
 )
 
 type routes struct {
-	System *systemV1.System
+	System *v1.SystemServer
 	Policy *policyV1.Policy
 	Scale  *scaleV1.Scale
 	UI     *v1.UIServer
@@ -112,7 +111,7 @@ func (h *HTTPServer) setupScaleRoutes() []router.Route {
 func (h *HTTPServer) setupSystemRoutes() []router.Route {
 	h.logger.Debug().Msg("setting up server system routes")
 
-	h.routes.System = systemV1.NewSystemServer(h.logger, h.nomad, h.cfg.Server, h.telemetry, h.clusterMember)
+	h.routes.System = v1.NewSystemServer(h.logger, h.nomad, h.cfg.Server, h.telemetry, h.clusterMember)
 
 	return router.Routes{
 		router.Route{
