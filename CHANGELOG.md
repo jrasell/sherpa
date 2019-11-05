@@ -3,6 +3,9 @@
 IMPROVEMENTS:
  * Metrics to measure policy backend request latencies [[GH-93]](https://github.com/jrasell/sherpa/pull/93)
 
+REFACTOR:
+ * Move the system API endpoint into the `server/endpoints/v1` package [[GH-99]](https://github.com/jrasell/sherpa/pull/99)
+
 ## 0.3.0 (4 November, 2019)
 
 IMPROVEMENTS:
