@@ -53,7 +53,7 @@ func (s *Scale) JobGroupOut(job, group string, count int, meta map[string]string
 		q.Params["count"] = strconv.Itoa(count)
 	}
 
-	err := s.client.put(path, buildScaleReqBody(meta), &resp, &q)
+	err := s.client.post(path, buildScaleReqBody(meta), &resp, &q)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (s *Scale) JobGroupIn(job, group string, count int, meta map[string]string)
 
 	path := fmt.Sprintf("/v1/scale/in/%s/%s", job, group)
 
-	err := s.client.put(path, buildScaleReqBody(meta), &resp, &q)
+	err := s.client.post(path, buildScaleReqBody(meta), &resp, &q)
 	if err != nil {
 		return nil, err
 	}
