@@ -86,12 +86,19 @@ This endpoint can be used to query the Sherpa server for its latest telemetry da
 | :--------------------------- | :--------------------- |
 | `GET`    | `/v1/system/metrics`              | `200 application/binary` |
 
+#### Parameters
+* `:format` (string: "") - Specifies the metrics format to be other than the JSON default. Currently, only prometheus is supported as an alternative format.
+
 
 ### Sample Request
 
 ```
 $ curl \
     http://127.0.0.1:8000/v1/system/metrics
+```
+```
+$ curl \
+    http://127.0.0.1:8000/v1/system/metrics?format=prometheus
 ```
 
 ### Sample Response

@@ -9,14 +9,16 @@ require (
 	github.com/gorilla/mux v1.7.1
 	github.com/hashicorp/consul/api v1.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.0
-	github.com/hashicorp/golang-lru v0.5.1 // indirect
+	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/hashicorp/nomad/api v0.0.0-20190508234936-7ba2378a159e
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.7
 	github.com/oklog/run v1.0.0
 	github.com/panjf2000/ants/v2 v2.1.1
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v0.9.2
 	github.com/rs/zerolog v1.14.3
 	github.com/ryanuber/columnize v2.1.0+incompatible
 	github.com/sean-/sysexits v0.0.0-20171026162210-598690305aaa
