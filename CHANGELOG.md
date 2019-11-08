@@ -6,6 +6,9 @@ IMPROVEMENTS:
  * Metrics to measure autoscaler performance and health [[GH-95]](https://github.com/jrasell/sherpa/pull/95)
  * Add prometheus format option to metrics endpoint [[GH-101]](https://github.com/jrasell/sherpa/pull/101)
 
+BUG FIXES:
+ * Scale out/in endpoints should use POST rather than PUT method [[GH-103]](https://github.com/jrasell/sherpa/pull/103)
+
 REFACTOR:
  * Move the system API endpoint into the `server/endpoints/v1` package [[GH-99]](https://github.com/jrasell/sherpa/pull/99)
 
