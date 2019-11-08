@@ -80,16 +80,32 @@ func (h *HTTPServer) setupScaleRoutes() []router.Route {
 	})
 
 	return router.Routes{
+		// Deprecated: the PUT method is deprecated in favour of POST and will be removed in a
+		// future release.
 		router.Route{
 			Name:    routeScaleOutJobGroupName,
 			Method:  http.MethodPut,
 			Pattern: routeScaleOutJobGroupPattern,
 			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.OutJobGroup),
 		},
+		// Deprecated: the PUT method is deprecated in favour of POST and will be removed in a
+		// future release.
 		router.Route{
 			Name:    routeScaleInJobGroupName,
 			Method:  http.MethodPut,
 			Pattern: routeScaleInJobGroupPattern,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.InJobGroup),
+		},
+		router.Route{
+			Name:    routePostScaleOutJobGroupName,
+			Method:  http.MethodPost,
+			Pattern: routePostScaleOutJobGroupPattern,
+			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.OutJobGroup),
+		},
+		router.Route{
+			Name:    routePostScaleInJobGroupName,
+			Method:  http.MethodPost,
+			Pattern: routePostScaleInJobGroupPattern,
 			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.InJobGroup),
 		},
 		router.Route{

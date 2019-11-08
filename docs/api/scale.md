@@ -6,7 +6,7 @@ This endpoint can be used to scale a Nomad job group out, therefore increasing i
 
 | Method   | Path                         |
 | :--------------------------- | :--------------------- |
-| `PUT`    | `/v1/scale/out/:job_id/:group`              | `200 application/binary` |
+| `POST`    | `/v1/scale/out/:job_id/:group`              | `201 application/binary` |
 
 #### Parameters
 
@@ -47,7 +47,7 @@ This endpoint can be used to scale a Nomad job group in, therefore decreasing it
 
 | Method   | Path                         |
 | :--------------------------- | :--------------------- |
-| `PUT`    | `/v1/scale/in/:job_id/:group`              | `200 application/binary` |
+| `POST`    | `/v1/scale/in/:job_id/:group`              | `201 application/binary` |
 
 #### Parameters
 
