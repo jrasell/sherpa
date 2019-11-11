@@ -1,4 +1,4 @@
-# Sherpa Scaling State Guide
+# Sherpa Scaling State
 
 Scaling state can be accessed by the CLI, API, and UI, giving operators quick and easy insight into scaling events the Sherpa server has undertaken. Individual scaling events include details describing the changes that were made, the resulting Nomad evaluation ID, and the source of the request, whether it be the internal autoscaler or a request to the API.
 

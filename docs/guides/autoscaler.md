@@ -1,3 +1,3 @@
-# Sherpa AutoScaler Guide
+# Sherpa AutoScaler
 
-Sherpa can run using an internal autoscaler which uses Nomad job resource utilization stats to determine whether a group is eligible for scaling. The autoscaler will iterate stored policies, performing calculations to figure out each job group CPU and memory consummation. If consumption is above 80% or below 20%, Sherpa will request scaling of the job group as long as the scaling policies limits are not violated.
+The Sherpa internal autoscaler iterates through stored scaling policies and performs decisions based on the configured checks. The autoscaler will calculate a decision for every enabled checks, eventually consolidating these into a single final decision. If there are two checks for a job group which request a scale out and scale in activity, the scale out will always take priority.
