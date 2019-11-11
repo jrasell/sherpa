@@ -17,6 +17,7 @@ require (
 	github.com/oklog/run v1.0.0
 	github.com/panjf2000/ants/v2 v2.1.1
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v0.9.2
 	github.com/rs/zerolog v1.14.3
 	github.com/ryanuber/columnize v2.1.0+incompatible
 	github.com/sean-/sysexits v0.0.0-20171026162210-598690305aaa
