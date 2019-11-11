@@ -150,11 +150,14 @@ func (c *Client) put(endpoint string, in, out interface{}, q *QueryOptions) erro
 	return nil
 }
 
-func (c *Client) post(endpoint string, in, out interface{}) error {
+func (c *Client) post(endpoint string, in, out interface{}, q *QueryOptions) error {
 	r, err := c.newRequest(http.MethodPost, endpoint)
 	if err != nil {
 		return err
 	}
+
+	r.setQueryOptions(q)
+
 	r.obj = in
 	resp, err := c.doRequest(r)
 	resp, err = requireOK(resp, err, http.StatusCreated)

@@ -68,13 +68,13 @@ func (p *Policies) ReadJobGroupPolicy(job, group string) (*JobGroupPolicy, error
 }
 
 func (p *Policies) WriteJobPolicy(job string, policy *map[string]*JobGroupPolicy) error {
-	return p.client.post("/v1/policy/"+job, policy, nil)
+	return p.client.post("/v1/policy/"+job, policy, nil, nil)
 }
 
 func (p *Policies) WriteJobGroupPolicy(job, group string, policy *JobGroupPolicy) error {
 	path := fmt.Sprintf("/v1/policy/%s/%s", job, group)
 
-	return p.client.post(path, policy, nil)
+	return p.client.post(path, policy, nil, nil)
 }
 
 func (p *Policies) DeleteJobPolicy(job string) error {

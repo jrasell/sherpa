@@ -1,6 +1,6 @@
 # Telemetry
 
-The Sherpa server collects various runtime metrics about the performance that are retained for one minute. This data can be viewed either by sending the Sherpa server process a signal, or [configuring](./README.md) the server to stream data to [statsite](https://github.com/statsite/statsite) or [statsd](https://github.com/statsd/statsd).
+The Sherpa server collects various runtime metrics about the performance that are retained for one minute. This data can be viewed either by sending the Sherpa server process a signal, or [configuring](./README.md) the server to stream data to [statsite](https://github.com/statsite/statsite), [statsd](https://github.com/statsd/statsd), or be scrapped by [Prometheus](https://prometheus.io/).
 
 To view this data via sending a signal to the Sherpa process: on Unix, this is `USR1` while on Windows it is `BREAK`. Once Nomad receives the signal, it will dump the current telemetry information to the server's `stderr`:
 

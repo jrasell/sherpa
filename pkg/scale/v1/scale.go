@@ -152,7 +152,7 @@ func (s *Scale) InJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, bytes, http.StatusOK)
+	writeJSONResponse(w, bytes, http.StatusCreated)
 }
 
 func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
@@ -263,7 +263,7 @@ func (s *Scale) OutJobGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSONResponse(w, bytes, http.StatusOK)
+	writeJSONResponse(w, bytes, http.StatusCreated)
 }
 
 func parseScaleRequestBody(r *http.Request) (*scaleRequestBody, error) {
