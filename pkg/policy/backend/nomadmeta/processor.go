@@ -1,6 +1,7 @@
 package nomadmeta
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/hashicorp/nomad/api"
@@ -106,10 +107,11 @@ func (pr *Processor) policyFromMeta(meta map[string]string) *policy.GroupScaling
 		Cooldown:                          pr.cooldownValueOrDefault(meta),
 		ScaleInCount:                      pr.scaleInValueOrDefault(meta),
 		ScaleOutCount:                     pr.scaleOutValueOrDefault(meta),
-		ScaleOutCPUPercentageThreshold:    pr.scaleOutCPUThresholdValueOrDefault(meta),
-		ScaleOutMemoryPercentageThreshold: pr.scaleOutMemoryThresholdValueOrDefault(meta),
-		ScaleInCPUPercentageThreshold:     pr.scaleInCPUThresholdValueOrDefault(meta),
-		ScaleInMemoryPercentageThreshold:  pr.scaleInMemoryThresholdValueOrDefault(meta),
+		ScaleOutCPUPercentageThreshold:    pr.scaleOutCPUThresholdValueOrNil(meta),
+		ScaleOutMemoryPercentageThreshold: pr.scaleOutMemoryThresholdValueOrNil(meta),
+		ScaleInCPUPercentageThreshold:     pr.scaleInCPUThresholdValueOrNil(meta),
+		ScaleInMemoryPercentageThreshold:  pr.scaleInMemoryThresholdValueOrNil(meta),
+		ExternalChecks:                    pr.externalChecksFromMeta(meta),
 	}
 }
 
@@ -185,52 +187,64 @@ func (pr *Processor) scaleOutValueOrDefault(meta map[string]string) int {
 	return policy.DefaultScaleOutCount
 }
 
-func (pr *Processor) scaleOutCPUThresholdValueOrDefault(meta map[string]string) int {
+func (pr *Processor) scaleOutCPUThresholdValueOrNil(meta map[string]string) *float64 {
 	if val, ok := meta[metaKeyScaleOutCPUPercentageThreshold]; ok {
-		outThreshold, err := strconv.Atoi(val)
+		outThreshold, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			pr.logger.Error().Err(err).Msg("failed to convert scale out CPU meta value to int")
-			return policy.DefaultScaleOutCPUPercentageThreshold
+			pr.logger.Error().Err(err).Msg("failed to convert scale out CPU meta value to float64")
+			return nil
 		}
-		return outThreshold
+		return &outThreshold
 	}
-	return policy.DefaultScaleOutCPUPercentageThreshold
+	return nil
 }
 
-func (pr *Processor) scaleInCPUThresholdValueOrDefault(meta map[string]string) int {
+func (pr *Processor) scaleInCPUThresholdValueOrNil(meta map[string]string) *float64 {
 	if val, ok := meta[metaKeyScaleInCPUPercentageThreshold]; ok {
-		outThreshold, err := strconv.Atoi(val)
+		outThreshold, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			pr.logger.Error().Err(err).Msg("failed to convert scale in CPU meta value to int")
-			return policy.DefaultScaleInCPUPercentageThreshold
+			pr.logger.Error().Err(err).Msg("failed to convert scale in CPU meta value to float64")
+			return nil
 		}
-		return outThreshold
+		return &outThreshold
 	}
-	return policy.DefaultScaleInCPUPercentageThreshold
+	return nil
 }
 
-func (pr *Processor) scaleOutMemoryThresholdValueOrDefault(meta map[string]string) int {
+func (pr *Processor) scaleOutMemoryThresholdValueOrNil(meta map[string]string) *float64 {
 	if val, ok := meta[metaKeyScaleOutMemoryPercentageThreshold]; ok {
-		outThreshold, err := strconv.Atoi(val)
+		outThreshold, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			pr.logger.Error().Err(err).Msg("failed to convert scale out memory meta value to int")
-			return policy.DefaultScaleOutMemoryPercentageThreshold
+			pr.logger.Error().Err(err).Msg("failed to convert scale out memory meta value to float64")
+			return nil
 		}
-		return outThreshold
+		return &outThreshold
 	}
-	return policy.DefaultScaleOutMemoryPercentageThreshold
+	return nil
 }
 
-func (pr *Processor) scaleInMemoryThresholdValueOrDefault(meta map[string]string) int {
+func (pr *Processor) scaleInMemoryThresholdValueOrNil(meta map[string]string) *float64 {
 	if val, ok := meta[metaKeyScaleInMemoryPercentageThreshold]; ok {
-		outThreshold, err := strconv.Atoi(val)
+		outThreshold, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			pr.logger.Error().Err(err).Msg("failed to convert scale in memory meta value to int")
-			return policy.DefaultScaleInMemoryPercentageThreshold
+			pr.logger.Error().Err(err).Msg("failed to convert scale in memory meta value to float64")
+			return nil
 		}
-		return outThreshold
+		return &outThreshold
 	}
-	return policy.DefaultScaleInMemoryPercentageThreshold
+	return nil
+}
+
+func (pr *Processor) externalChecksFromMeta(meta map[string]string) map[string]*policy.ExternalCheck {
+	if val, ok := meta[metaKeyExternalChecks]; ok {
+		var checks map[string]*policy.ExternalCheck
+		if err := json.Unmarshal([]byte(val), &checks); err != nil {
+			pr.logger.Error().Err(err).Msg("failed to unmarshal external checks into struct")
+			return nil
+		}
+		return checks
+	}
+	return nil
 }
 
 func (pr *Processor) hasMetaKeys(meta map[string]string) bool {

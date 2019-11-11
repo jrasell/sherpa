@@ -78,7 +78,7 @@ func (p *Policy) GetJobGroupPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if gPolicy == nil || *gPolicy == (policy.GroupScalingPolicy{}) {
+	if gPolicy == nil || gPolicy == (&policy.GroupScalingPolicy{}) {
 		http.NotFound(w, r)
 		return
 	}
@@ -189,12 +189,10 @@ func decodeGroupPolicyReqBodyAndValidate(body []byte) (*policy.GroupScalingPolic
 		return nil, errors.Wrap(err, "failed to unmarshal request body")
 	}
 
-	if err := policy.Validate(p); err != nil {
+	if err := p.Validate(); err != nil {
 		return nil, errors.Wrap(err, "failed to validate policy document")
 	}
-	policy.MergeWithDefaults(p)
-
-	return p, nil
+	return p.MergeWithDefaults(), nil
 }
 
 func decodeJobPolicyReqBodyAndValidate(body []byte) (map[string]*policy.GroupScalingPolicy, error) {
@@ -205,10 +203,10 @@ func decodeJobPolicyReqBodyAndValidate(body []byte) (map[string]*policy.GroupSca
 	}
 
 	for _, pol := range p {
-		if err := policy.Validate(pol); err != nil {
+		if err := pol.Validate(); err != nil {
 			return nil, errors.Wrap(err, "failed to validate policy document")
 		}
-		policy.MergeWithDefaults(pol)
+		pol = pol.MergeWithDefaults()
 	}
 
 	return p, nil

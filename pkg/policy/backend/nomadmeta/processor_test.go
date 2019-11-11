@@ -3,6 +3,8 @@ package nomadmeta
 import (
 	"testing"
 
+	"github.com/jrasell/sherpa/pkg/helper"
+
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -35,10 +37,10 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 				MaxCount:                          100,
 				ScaleOutCount:                     7,
 				ScaleInCount:                      3,
-				ScaleOutCPUPercentageThreshold:    95,
-				ScaleOutMemoryPercentageThreshold: 95,
-				ScaleInCPUPercentageThreshold:     55,
-				ScaleInMemoryPercentageThreshold:  55,
+				ScaleOutCPUPercentageThreshold:    helper.Float64ToPointer(95),
+				ScaleOutMemoryPercentageThreshold: helper.Float64ToPointer(95),
+				ScaleInCPUPercentageThreshold:     helper.Float64ToPointer(55),
+				ScaleInMemoryPercentageThreshold:  helper.Float64ToPointer(55),
 			},
 		},
 		{
@@ -46,16 +48,12 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 				metaKeyEnabled: "true",
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
-				Enabled:                           true,
-				Cooldown:                          180,
-				MinCount:                          2,
-				MaxCount:                          10,
-				ScaleOutCount:                     1,
-				ScaleInCount:                      1,
-				ScaleOutCPUPercentageThreshold:    80,
-				ScaleOutMemoryPercentageThreshold: 80,
-				ScaleInCPUPercentageThreshold:     20,
-				ScaleInMemoryPercentageThreshold:  20,
+				Enabled:       true,
+				Cooldown:      180,
+				MinCount:      2,
+				MaxCount:      10,
+				ScaleOutCount: 1,
+				ScaleInCount:  1,
 			},
 		},
 		{
@@ -63,16 +61,12 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 				metaKeyEnabled: "false",
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
-				Enabled:                           false,
-				Cooldown:                          180,
-				MinCount:                          2,
-				MaxCount:                          10,
-				ScaleOutCount:                     1,
-				ScaleInCount:                      1,
-				ScaleOutCPUPercentageThreshold:    80,
-				ScaleOutMemoryPercentageThreshold: 80,
-				ScaleInCPUPercentageThreshold:     20,
-				ScaleInMemoryPercentageThreshold:  20,
+				Enabled:       false,
+				Cooldown:      180,
+				MinCount:      2,
+				MaxCount:      10,
+				ScaleOutCount: 1,
+				ScaleInCount:  1,
 			},
 		},
 		{
@@ -94,10 +88,10 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 				MaxCount:                          10000,
 				ScaleOutCount:                     1000,
 				ScaleInCount:                      10,
-				ScaleOutCPUPercentageThreshold:    95,
-				ScaleOutMemoryPercentageThreshold: 75,
-				ScaleInCPUPercentageThreshold:     15,
-				ScaleInMemoryPercentageThreshold:  35,
+				ScaleOutCPUPercentageThreshold:    helper.Float64ToPointer(95),
+				ScaleOutMemoryPercentageThreshold: helper.Float64ToPointer(75),
+				ScaleInCPUPercentageThreshold:     helper.Float64ToPointer(15),
+				ScaleInMemoryPercentageThreshold:  helper.Float64ToPointer(35),
 			},
 		},
 		{
@@ -114,16 +108,36 @@ func TestProcessor_policyFromMeta(t *testing.T) {
 				metaKeyScaleInMemoryPercentageThreshold:  "untranslatable",
 			},
 			expectedPolicy: &policy.GroupScalingPolicy{
-				Enabled:                           false,
-				Cooldown:                          180,
-				MinCount:                          2,
-				MaxCount:                          10,
-				ScaleOutCount:                     1,
-				ScaleInCount:                      1,
-				ScaleOutCPUPercentageThreshold:    80,
-				ScaleOutMemoryPercentageThreshold: 80,
-				ScaleInCPUPercentageThreshold:     20,
-				ScaleInMemoryPercentageThreshold:  20,
+				Enabled:       false,
+				Cooldown:      180,
+				MinCount:      2,
+				MaxCount:      10,
+				ScaleOutCount: 1,
+				ScaleInCount:  1,
+			},
+		},
+		{
+			meta: map[string]string{
+				metaKeyEnabled:        "true",
+				metaKeyExternalChecks: "{\"prometheus_test\":{\"Enabled\":true,\"Provider\":\"prometheus\",\"Query\":\"job:nomad_redis_cache_memory:percentage\",\"ComparisonOperator\":\"less-than\",\"ComparisonValue\":30,\"Action\":\"scale-in\"}}",
+			},
+			expectedPolicy: &policy.GroupScalingPolicy{
+				Enabled:       true,
+				Cooldown:      180,
+				MinCount:      2,
+				MaxCount:      10,
+				ScaleOutCount: 1,
+				ScaleInCount:  1,
+				ExternalChecks: map[string]*policy.ExternalCheck{
+					"prometheus_test": {
+						Enabled:            true,
+						Provider:           policy.ProviderPrometheus,
+						Query:              "job:nomad_redis_cache_memory:percentage",
+						ComparisonOperator: policy.ComparisonLessThan,
+						ComparisonValue:    30,
+						Action:             policy.ActionScaleIn,
+					},
+				},
 			},
 		},
 	}
