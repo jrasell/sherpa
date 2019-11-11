@@ -278,16 +278,10 @@ Autoscale metrics allow operators to get insight into how the autoscaler is func
     <td>Summary</td>
   </tr>
   <tr>
-    <td>`sherpa.autoscale.evaluation.error`</td>
-    <td>Number of autoscaling evaluation errors across all jobs</td>
-    <td>Number of errors</td>
-    <td>Counter</td>
-  </tr>
-  <tr>
-    <td>`sherpa.autoscale.{job}.evaluation.error`</td>
-    <td>Number of autoscaling evaluation errors for the job named {job}</td>
-    <td>Number of errors</td>
-    <td>Counter</td>
+    <td>`sherpa.autoscale.{job}.{group}.evaluation`</td>
+    <td>The time taken to perform the autoscaling evaluation for the job named {job} and group named {group}</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
   </tr>
   <tr>
     <td>`sherpa.autoscale.trigger.error`</td>
@@ -313,4 +307,22 @@ Autoscale metrics allow operators to get insight into how the autoscaler is func
     <td>Number of successes</td>
     <td>Counter</td>
   </tr>
+  <tr>
+    <td>`sherpa.autoscale.prometheus.get_value`</td>
+    <td>The time taken to query Prometheus for a metric value</td>
+    <td>Milliseconds</td>
+    <td>Summary</td>
+  </tr>
+  <tr>
+    <td>`sherpa.autoscale.prometheus.error`</td>
+    <td>Number of errors querying Prometheus for a metric value</td>
+    <td>Number of errors</td>
+    <td>Counter</td>
+  </tr>
+    <tr>
+      <td>`sherpa.autoscale.prometheus.success`</td>
+      <td>Number of successful queries of Prometheus for a metric value</td>
+      <td>Number of successes</td>
+      <td>Counter</td>
+    </tr>
 </table>

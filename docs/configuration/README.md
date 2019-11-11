@@ -14,6 +14,7 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 * `--log-format` (string: "auto") - Specify the log format ("auto", "zerolog" or "human").
 * `--log-level` (string: "info") - Change the level used for logging.
 * `--log-use-color` (bool: true) - Use ANSI colors in logging output.
+* `--metric-provider-prometheus-addr` (string: "") The address of the Prometheus endpoint in the form <protocol>://<addr>:<port>.
 * `--policy-engine-api-enabled` (bool: true) - Enable the Sherpa API to manage scaling policies.
 * `--policy-engine-nomad-meta-enabled` (bool: false) - Enable Nomad job meta lookups to manage scaling policies.
 * `--policy-engine-strict-checking-enabled` (bool: true) - When enabled, all scaling activities must pass through policy checks.
