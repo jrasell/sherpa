@@ -9,7 +9,6 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/consul/api"
-	"github.com/jrasell/sherpa/pkg/client"
 	"github.com/jrasell/sherpa/pkg/state"
 	"github.com/jrasell/sherpa/pkg/state/scale"
 	"github.com/pkg/errors"
@@ -44,16 +43,14 @@ type StateBackend struct {
 	kv *api.KV
 }
 
-func NewStateBackend(log zerolog.Logger, path string) scale.Backend {
-	consul, _ := client.NewConsulClient()
-
+func NewStateBackend(log zerolog.Logger, path string, client *api.Client) scale.Backend {
 	return &StateBackend{
 		basePath:         path + baseKVPath,
 		eventsPath:       path + eventsKVPath,
 		latestEventsPath: path + latestEventsKVPath,
 		gcThreshold:      scale.GarbageCollectionThreshold,
 		logger:           log,
-		kv:               consul.KV(),
+		kv:               client.KV(),
 	}
 }
 
