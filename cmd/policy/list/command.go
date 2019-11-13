@@ -3,6 +3,7 @@ package list
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
@@ -54,14 +55,20 @@ func runList(_ *cobra.Command, args []string) {
 		os.Exit(sysexits.OK)
 	}
 
-	var out []string
-	out = append(out, outputHeader)
+	out := []string{outputHeader}
+	out = append(out, produceSortedList(resp)...)
 
-	for job, v := range *resp {
+	fmt.Println(helper.FormatList(out))
+}
+
+func produceSortedList(input *map[string]map[string]*api.JobGroupPolicy) []string {
+	var sorted []string
+	for job, v := range *input {
 		for group, pol := range v {
-			out = append(out, fmt.Sprintf("%s:%s|%v|%v|%v|%v|%v|%v",
+			sorted = append(sorted, fmt.Sprintf("%s:%s|%v|%v|%v|%v|%v|%v",
 				job, group, pol.Enabled, pol.MinCount, pol.MaxCount, pol.Cooldown, pol.ScaleInCount, pol.ScaleOutCount))
 		}
 	}
-	fmt.Println(helper.FormatList(out))
+	sort.Strings(sorted)
+	return sorted
 }
