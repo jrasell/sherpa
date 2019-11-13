@@ -1,4 +1,4 @@
-# Telemetry
+# Sherpa Telemetry
 
 The Sherpa server collects various runtime metrics about the performance that are retained for one minute. This data can be viewed either by sending the Sherpa server process a signal, or [configuring](./README.md) the server to stream data to [statsite](https://github.com/statsite/statsite), [statsd](https://github.com/statsd/statsd), or be scrapped by [Prometheus](https://prometheus.io/).
 
