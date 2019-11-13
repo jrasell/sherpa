@@ -17,11 +17,10 @@ const (
 	routeUIName            = "UI"
 	routeUIPattern         = "/ui"
 
-	routeGetScalingStatusPattern = "/v1/scale/status"
-	routeGetScalingStatusName    = "GetScalingStatus"
-	routeGetScalingInfoPattern   = "/v1/scale/status/{id}"
-	routeGetScalingInfoName      = "GetScalingInfo"
-
+	routeGetScalingStatusPattern            = "/v1/scale/status"
+	routeGetScalingStatusName               = "GetScalingStatus"
+	routeGetScalingInfoPattern              = "/v1/scale/status/{id}"
+	routeGetScalingInfoName                 = "GetScalingInfo"
 	routeScaleOutJobGroupName               = "ScaleOutJobGroup"
 	routeScaleOutJobGroupPattern            = "/v1/scale/out/{job_id}/{group}"
 	routeScaleInJobGroupName                = "ScaleInJobGroup"

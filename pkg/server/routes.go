@@ -114,7 +114,6 @@ func (h *HTTPServer) setupScaleRoutes() []router.Route {
 			Pattern: routeGetScalingStatusPattern,
 			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Scale.StatusList),
 		},
-
 		router.Route{
 			Name:    routeGetScalingInfoName,
 			Method:  http.MethodGet,

@@ -28,7 +28,7 @@ type JobGroupPolicy struct {
 
 func (p *Policies) List() (*map[string]map[string]*JobGroupPolicy, error) {
 	var resp map[string]map[string]*JobGroupPolicy
-	err := p.client.get("/v1/policies", &resp)
+	err := p.client.get("/v1/policies", &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (p *Policies) List() (*map[string]map[string]*JobGroupPolicy, error) {
 
 func (p *Policies) ReadJobPolicy(job string) (*map[string]*JobGroupPolicy, error) {
 	var resp map[string]*JobGroupPolicy
-	err := p.client.get("/v1/policy/"+job, &resp)
+	err := p.client.get("/v1/policy/"+job, &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (p *Policies) ReadJobGroupPolicy(job, group string) (*JobGroupPolicy, error
 
 	path := fmt.Sprintf("/v1/policy/%s/%s", job, group)
 
-	err := p.client.get(path, &resp)
+	err := p.client.get(path, &resp, nil)
 	if err != nil {
 		return nil, err
 	}

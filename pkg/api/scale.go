@@ -25,6 +25,7 @@ type ScaleResp struct {
 }
 
 type ScalingEvent struct {
+	ID      string
 	EvalID  string
 	Source  string
 	Time    int64
@@ -78,9 +79,12 @@ func (s *Scale) JobGroupIn(job, group string, count int, meta map[string]string)
 	return &resp, nil
 }
 
-func (s *Scale) List() (map[uuid.UUID]map[string]*ScalingEvent, error) {
+func (s *Scale) List(latest bool) (map[uuid.UUID]map[string]*ScalingEvent, error) {
 	var resp map[uuid.UUID]map[string]*ScalingEvent
-	err := s.client.get("/v1/scale/status", &resp)
+
+	q := QueryOptions{Params: map[string]string{"latest": strconv.FormatBool(latest)}}
+
+	err := s.client.get("/v1/scale/status", &resp, &q)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +93,7 @@ func (s *Scale) List() (map[uuid.UUID]map[string]*ScalingEvent, error) {
 
 func (s *Scale) Info(id string) (map[string]*ScalingEvent, error) {
 	var resp map[string]*ScalingEvent
-	err := s.client.get("/v1/scale/status/"+id, &resp)
+	err := s.client.get("/v1/scale/status/"+id, &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +104,5 @@ func buildScaleReqBody(meta map[string]string) interface{} {
 	if meta == nil {
 		return nil
 	}
-
 	return &scaleReqBody{meta}
 }

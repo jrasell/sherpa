@@ -32,7 +32,7 @@ func (c *Client) System() *System {
 
 func (s *System) Health() (*HealthResp, error) {
 	var resp HealthResp
-	err := s.client.get("/v1/system/health", &resp)
+	err := s.client.get("/v1/system/health", &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (s *System) Health() (*HealthResp, error) {
 
 func (s *System) Info() (*InfoResp, error) {
 	var resp InfoResp
-	err := s.client.get("/v1/system/info", &resp)
+	err := s.client.get("/v1/system/info", &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *System) Info() (*InfoResp, error) {
 
 func (s *System) Metrics() (*metrics.MetricsSummary, error) {
 	var resp metrics.MetricsSummary
-	err := s.client.get("/v1/system/metrics", &resp)
+	err := s.client.get("/v1/system/metrics", &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *System) Metrics() (*metrics.MetricsSummary, error) {
 
 func (s *System) Leader() (*LeaderResp, error) {
 	var resp LeaderResp
-	err := s.client.get("/v1/system/leader", &resp)
+	err := s.client.get("/v1/system/leader", &resp, nil)
 	if err != nil {
 		return nil, err
 	}

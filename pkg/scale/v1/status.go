@@ -6,9 +6,15 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/jrasell/sherpa/pkg/state"
 )
 
 func (s *Scale) StatusList(w http.ResponseWriter, r *http.Request) {
+	if l := r.URL.Query().Get("latest"); l == "true" {
+		s.statusListLatest(w)
+		return
+	}
+
 	list, err := s.stateBackend.GetScalingEvents()
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to get scaling events from state")
@@ -19,6 +25,29 @@ func (s *Scale) StatusList(w http.ResponseWriter, r *http.Request) {
 	bytes, err := json.Marshal(list)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to marshal scaling state response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSONResponse(w, bytes, http.StatusOK)
+}
+
+func (s *Scale) statusListLatest(w http.ResponseWriter) {
+	list, err := s.stateBackend.GetLatestScalingEvents()
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to get latest scaling events from state")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	out := map[uuid.UUID]map[string]*state.ScalingEvent{}
+	for jg, event := range list {
+		out[event.ID] = map[string]*state.ScalingEvent{jg: event}
+	}
+
+	bytes, err := json.Marshal(out)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to marshal latest scaling state response")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

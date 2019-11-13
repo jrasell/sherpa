@@ -108,11 +108,13 @@ func (c *Config) ConfigureTLS() error {
 	return nil
 }
 
-func (c *Client) get(endpoint string, out interface{}) error {
+func (c *Client) get(endpoint string, out interface{}, q *QueryOptions) error {
 	r, err := c.newRequest(http.MethodGet, endpoint)
 	if err != nil {
 		return err
 	}
+
+	r.setQueryOptions(q)
 
 	resp, err := c.doRequest(r)
 	resp, err = requireOK(resp, err, http.StatusOK)

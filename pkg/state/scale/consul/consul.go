@@ -169,6 +169,7 @@ func (s StateBackend) PutScalingEvent(job string, event *state.ScalingEventMessa
 	defer metrics.MeasureSince(metricKeyPutEvent, time.Now())
 
 	sEntry := &state.ScalingEvent{
+		ID:      event.ID,
 		EvalID:  event.EvalID,
 		Source:  event.Source,
 		Time:    event.Time,

@@ -121,6 +121,7 @@ func generateTestEvent(t int64) *state.ScalingEventMessage {
 
 func convertMessageToStateRepresentation(event *state.ScalingEventMessage) *state.ScalingEvent {
 	return &state.ScalingEvent{
+		ID:      event.ID,
 		EvalID:  event.EvalID,
 		Source:  event.Source,
 		Time:    event.Time,
