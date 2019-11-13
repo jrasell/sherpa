@@ -3,7 +3,11 @@ package autoscale
 import (
 	"time"
 
+	"github.com/jrasell/sherpa/pkg/helper"
+
 	nomad "github.com/hashicorp/nomad/api"
+	"github.com/jrasell/sherpa/pkg/autoscale/metrics"
+	"github.com/jrasell/sherpa/pkg/autoscale/metrics/prometheus"
 	"github.com/jrasell/sherpa/pkg/policy"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/jrasell/sherpa/pkg/scale"
@@ -19,19 +23,19 @@ type AutoScale struct {
 
 	policyBackend policyBackend.PolicyBackend
 	pool          *ants.PoolWithFunc
-	inProgress    bool
+
+	// metricProvider
+	metricProvider map[policy.MetricsProvider]metrics.Provider
 
 	// isRunning is used to track whether the autoscaler loop is being run. This helps determine
 	// whether stop should be called.
 	isRunning bool
 
+	// inProgress is used to determine if there is an autoscaling loop currently in progress.
+	inProgress bool
+
 	// doneChan is used to stop the autoscaling handler execution.
 	doneChan chan struct{}
-}
-
-type scalableResources struct {
-	cpu int
-	mem int
 }
 
 type workerPayload struct {
@@ -40,15 +44,22 @@ type workerPayload struct {
 	policy map[string]*policy.GroupScalingPolicy
 }
 
-func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p policyBackend.PolicyBackend, s scale.Scale, cfg *Config) (*AutoScale, error) {
+func NewAutoScaleServer(cfg *SetupConfig) (*AutoScale, error) {
 	as := AutoScale{
-		cfg:           cfg,
-		logger:        l,
-		nomad:         n,
-		policyBackend: p,
-		scaler:        s,
+		cfg: &Config{
+			ScalingInterval:   cfg.ScalingInterval,
+			ScalingThreads:    cfg.ScalingThreads,
+			StrictChecking:    cfg.StrictChecking,
+			MetricProviderCfg: cfg.MetricProviderCfg,
+		},
+		logger:        cfg.Logger,
+		nomad:         cfg.Nomad,
+		policyBackend: cfg.PolicyBackend,
+		scaler:        cfg.Scale,
 		doneChan:      make(chan struct{}),
 	}
+
+	as.setupMetricProviders()
 
 	pool, err := as.createWorkerPool()
 	if err != nil {
@@ -59,11 +70,29 @@ func NewAutoScaleServer(l zerolog.Logger, n *nomad.Client, p policyBackend.Polic
 	return &as, nil
 }
 
+// setupMetricProviders setups up the metric providers.
+func (a *AutoScale) setupMetricProviders() {
+
+	// Initialise the metric provider map within AutoScale.
+	a.metricProvider = make(map[policy.MetricsProvider]metrics.Provider)
+
+	// If there is available Prometheus config, setup the provider.
+	if a.cfg.MetricProviderCfg.Prometheus != nil {
+		promClient, err := prometheus.NewClient(a.cfg.MetricProviderCfg.Prometheus.Addr, a.logger)
+		if err != nil {
+			a.logger.Error().Err(err).Msg("failed to setup Prometheus metric provider client")
+		} else {
+			a.metricProvider[policy.ProviderPrometheus] = promClient
+		}
+	}
+}
+
 // IsRunning is used to determine if the autoscaler loop is running.
 func (a *AutoScale) IsRunning() bool {
 	return a.isRunning
 }
 
+// Run starts the autoscaler ticker loop and only stops when Stop() is called.
 func (a *AutoScale) Run() {
 	a.logger.Info().Msg("starting Sherpa internal auto-scaling engine")
 
@@ -112,13 +141,19 @@ func (a *AutoScale) Run() {
 				// cooldown.
 				for group := range allPolicies[job] {
 
+					// If the group policy is disabled, continue with the loop and ignore the
+					// policy.
+					if !allPolicies[job][group].Enabled {
+						continue
+					}
+
 					// Deployment check.
 					if a.scaler.JobGroupIsDeploying(job, group) {
 						a.logger.Debug().
 							Str("job", job).
 							Str("group", group).
 							Msg("job group is currently in deployment, skipping autoscaler evaluation")
-						break
+						continue
 					}
 
 					// Cooldown check.
@@ -129,7 +164,7 @@ func (a *AutoScale) Run() {
 							Str("job", job).
 							Str("group", group).
 							Msg("failed to determine if job group is in cooldown")
-						break
+						continue
 					}
 					if cool {
 						a.logger.Debug().
@@ -137,7 +172,7 @@ func (a *AutoScale) Run() {
 							Str("job", job).
 							Str("group", group).
 							Msg("job group is currently in scaling cooldown, skipping autoscaler evaluation")
-						break
+						continue
 					}
 
 					// At this point the initial checks have passed, therefore we can add the group
@@ -210,8 +245,16 @@ func (a *AutoScale) workerPoolFunc() func(payload interface{}) {
 			a.logger.Error().Msg("autoscaler worker pool received unexpected payload type")
 			return
 		}
-		a.autoscaleJob(req.jobID, req.policy, req.time.UnixNano())
+
+		newEval := autoscaleEvaluation{
+			nomad:          a.nomad,
+			metricProvider: a.metricProvider,
+			scaler:         a.scaler,
+			log:            helper.LoggerWithJobContext(a.logger, req.jobID),
+			jobID:          req.jobID,
+			policies:       req.policy,
+			time:           req.time.UnixNano(),
+		}
+		newEval.evaluateJob()
 	}
 }
-
-func (a *AutoScale) getSafeToEvaluateJobGroups() {}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/armon/go-metrics"
 	"github.com/hashicorp/consul/api"
-	"github.com/jrasell/sherpa/pkg/client"
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/jrasell/sherpa/pkg/policy/backend"
 	"github.com/pkg/errors"
@@ -38,13 +37,11 @@ type PolicyBackend struct {
 	kv *api.KV
 }
 
-func NewConsulPolicyBackend(log zerolog.Logger, path string) backend.PolicyBackend {
-	consul, _ := client.NewConsulClient()
-
+func NewConsulPolicyBackend(log zerolog.Logger, path string, client *api.Client) backend.PolicyBackend {
 	return &PolicyBackend{
 		path:   path + baseKVPath,
 		logger: log,
-		kv:     consul.KV(),
+		kv:     client.KV(),
 	}
 }
 
@@ -63,7 +60,7 @@ func (p *PolicyBackend) GetPolicies() (map[string]map[string]*policy.GroupScalin
 	out := make(map[string]map[string]*policy.GroupScalingPolicy)
 
 	for i := range kv {
-		keyPolicy := &policy.GroupScalingPolicy{}
+		keyPolicy := &policy.GroupScalingPolicy{ExternalChecks: make(map[string]*policy.ExternalCheck)}
 
 		if err := json.Unmarshal(kv[i].Value, keyPolicy); err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal Consul KV value")
@@ -99,7 +96,7 @@ func (p *PolicyBackend) GetJobPolicy(job string) (map[string]*policy.GroupScalin
 
 	for i := range kv {
 
-		keyPolicy := &policy.GroupScalingPolicy{}
+		keyPolicy := &policy.GroupScalingPolicy{ExternalChecks: make(map[string]*policy.ExternalCheck)}
 
 		if err := json.Unmarshal(kv[i].Value, keyPolicy); err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal Consul KV value")

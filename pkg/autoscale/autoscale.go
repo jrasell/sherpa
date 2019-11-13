@@ -1,91 +1,174 @@
 package autoscale
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 
-	"github.com/armon/go-metrics"
+	sendMetrics "github.com/armon/go-metrics"
 	nomad "github.com/hashicorp/nomad/api"
-	"github.com/jrasell/sherpa/pkg/helper"
+	"github.com/jrasell/sherpa/pkg/autoscale/metrics"
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/jrasell/sherpa/pkg/scale"
 	"github.com/jrasell/sherpa/pkg/state"
+	"github.com/rs/zerolog"
 )
 
-func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.GroupScalingPolicy, t int64) {
-	defer metrics.MeasureSince([]string{"autoscale", jobID, "evaluation"}, time.Now())
+type autoscaleEvaluation struct {
+	nomad          *nomad.Client
+	metricProvider map[policy.MetricsProvider]metrics.Provider
+	scaler         scale.Scale
 
-	// Create a new logger with the job in the context.
-	jobLogger := helper.LoggerWithJobContext(a.logger, jobID)
+	// policies are the job group policies that will be evaluated during this run.
+	policies map[string]*policy.GroupScalingPolicy
 
-	resourceInfo, allocs, err := a.getJobAllocations(jobID, policies)
+	// jobID is the Nomad job which is under evaluation.
+	jobID string
+
+	// time is the unix nano time indicating when this scaling evaluation was triggered.
+	time int64
+
+	// log has the jobID context to save repeating this effort.
+	log zerolog.Logger
+}
+
+func (ae *autoscaleEvaluation) evaluateJob() {
+	ae.log.Debug().Msg("triggering autoscaling job evaluation")
+
+	defer sendMetrics.MeasureSince([]string{"autoscale", ae.jobID, "evaluation"}, time.Now())
+
+	externalDecision := make(map[string]*scalingDecision)
+	nomadDecision := make(map[string]*scalingDecision)
+
+	// We need to check to see whether the the job policies contain a group which is using Nomad
+	// checks. This dictates whether we run the initial gatherNomadMetrics function and then
+	// trigger the Nomad evaluation.
+	var nomadCheck bool
+	for _, p := range ae.policies {
+		if p.NomadChecksEnabled() {
+			nomadCheck = true
+			break
+		}
+	}
+
+	var (
+		nomadMetricData *nomadGatheredMetrics
+		err             error
+	)
+
+	// If the job policy contains groups which rely on Nomad data, we should collect this now. It
+	// is most efficient to collect this data on a per job basis rather than per group. If we get
+	// an error when performing this, log it and continue. It is possible external checks are also
+	// in place and working; we can nil check the nomadMetricData to skip Nomad checks during this
+	// evaluation.
+	if nomadCheck {
+		nomadMetricData, err = ae.gatherNomadMetrics()
+		if err != nil {
+			ae.log.Error().Err(err).Msg("failed to collect Nomad metrics, skipping Nomad based checks")
+		}
+	}
+
+	// Iterate over the group policies for the job currently under evaluation.
+	for group, p := range ae.policies {
+
+		// Setup a start time so we can measure how long an individual job group evaluation takes.
+		start := time.Now()
+		ae.log.Debug().Str("group", group).Msg("triggering autoscaling job group evaluation")
+
+		// If the group policy has Nomad checks enabled, and we managed to successfully get the
+		// Nomad metric data, perform the evaluation.
+		if p.NomadChecksEnabled() && nomadMetricData != nil {
+			if nomadDec := ae.evaluateNomadJobMetrics(group, p, nomadMetricData); nomadDec != nil {
+				nomadDecision[group] = nomadDec
+			}
+		}
+
+		// If the group has external checks, perform these and ensure the decision if not nil,
+		// before adding this to the decision tree.
+		if p.ExternalChecks != nil {
+			if extDec := ae.calculateExternalScalingDecision(ae.jobID, p); extDec != nil {
+				externalDecision[group] = extDec
+			}
+		}
+
+		// This iteration has ended, so record the Sherpa metric.
+		sendMetrics.MeasureSince([]string{"autoscale", ae.jobID, group, "evaluation"}, start)
+	}
+
+	ae.evaluateDecisions(nomadDecision, externalDecision)
+}
+
+func (ae *autoscaleEvaluation) evaluateDecisions(nomadDecision, externalDecision map[string]*scalingDecision) {
+
+	// Exit quickly if there are now scaling decisions to process.
+	if len(nomadDecision) == 0 && len(externalDecision) == 0 {
+		ae.log.Info().Msg("scaling evaluation completed and no scaling required")
+		return
+	}
+	var finalDecision map[string]*scalingDecision
+
+	// Perform checks to see whether either the Nomad checks or the external checks have deemed
+	// scaling to be required. A single decision here means we can easily move onto building the
+	// scaling request.
+	if len(nomadDecision) == 0 && len(externalDecision) > 0 {
+		ae.log.Debug().Msg("scaling evaluation completed, handling scaling request based on external checks")
+		finalDecision = externalDecision
+	}
+	if len(nomadDecision) > 0 && len(externalDecision) == 0 {
+		ae.log.Debug().Msg("scaling evaluation completed, handling scaling request based on Nomad checks")
+		finalDecision = nomadDecision
+	}
+
+	// If both Nomad and external sources believe the job needs scaling, we need to ensure that
+	// they are not in different directions. If they are out will always trump in as we want to
+	// ensure we can handle load.
+	if len(nomadDecision) > 0 && len(externalDecision) > 0 {
+		ae.log.Debug().
+			Msg("scaling evaluation completed, handling scaling request based on Nomad and external checks")
+		finalDecision = ae.buildSingleDecision(nomadDecision, externalDecision)
+	}
+
+	// Build the scaling request to send to the scaler backend.
+	scaleReq := ae.buildScalingReq(finalDecision)
+
+	// If group scaling requests have been added to the array for the job that is currently being
+	// checked, trigger a scaling event. Run this in a routine as from this point there is nothing
+	// we can do.
+	if len(scaleReq) > 0 {
+		go ae.triggerScaling(scaleReq)
+	}
+}
+
+// triggerScaling is used to trigger the scaling of a job based on one or more group changes as
+// as result of the scaling evaluation.
+func (ae *autoscaleEvaluation) triggerScaling(req []*scale.GroupReq) {
+	resp, _, err := ae.scaler.Trigger(ae.jobID, req, state.SourceInternalAutoscaler)
 	if err != nil {
-		jobLogger.Error().Err(err).Msg("failed to gather allocation details for job")
-		sendEvaluationErrorMetrics(jobID)
-		return
+		ae.log.Error().Err(err).Msg("failed to trigger scaling of job")
+		sendTriggerErrorMetrics(ae.jobID)
 	}
 
-	// If there are no allocations which belong to a task group which has a scaling policy then we
-	// can exit here. It is worth logging this detail as exiting here could be because a policy is
-	// missing or has a typo within it.
-	if len(allocs) < 1 {
-		jobLogger.Debug().Msg("no task groups in job have scaling policies enabled")
-		return
+	if resp != nil {
+		ae.log.Info().
+			Str("id", resp.ID.String()).
+			Str("evaluation-id", resp.EvaluationID).
+			Msg("successfully triggered autoscaling of job")
+		sendTriggerSuccessMetrics(ae.jobID)
 	}
+}
 
-	resourceUsage, err := a.getJobResourceUsage(allocs)
-	if err != nil {
-		jobLogger.Error().Err(err).Msg("failed to gather job resource usage statistics")
-		sendEvaluationErrorMetrics(jobID)
-		return
-	}
-
+// buildScalingReq takes the scaling decisions for the job under evaluation, and creates a list of
+// group requests to send to the scaler backend.
+func (ae *autoscaleEvaluation) buildScalingReq(dec map[string]*scalingDecision) []*scale.GroupReq {
 	var scaleReq []*scale.GroupReq // nolint:prealloc
 
-	for group, pol := range policies {
-
-		// Create a new logger with the group in the context from the job logger.
-		groupLogger := helper.LoggerWithGroupContext(jobLogger, group)
-
-		// It is possible a scaling policy is configured for a job group, but the actual running
-		// Nomad job doesn't have this job group configured. If this is the case, we should warn
-		// the user in the logs and break the current loop.
-		if _, ok := resourceUsage[group]; !ok {
-			groupLogger.Warn().Msg("job group found in policy but not found in Nomad job")
-			continue
-		}
-
-		// Maths. Find the current CPU and memory utilisation in percentage based on the total
-		// available resources to the group, compared to their configured maximum based on the
-		// resource stanza.
-		cpuUsage := resourceUsage[group].cpu * 100 / resourceInfo[group].cpu
-		memUsage := resourceUsage[group].mem * 100 / resourceInfo[group].mem
-		groupLogger.Debug().
-			Int("mem-usage-percentage", memUsage).
-			Int("cpu-usage-percentage", cpuUsage).
-			Msg("resource utilisation calculation")
-
-		decision := calculateScalingDecision(&scalingCheckParams{
-			resourceUsage: &scalingMetrics{cpu: cpuUsage, memory: memUsage},
-			logger:        groupLogger,
-			policy:        pol,
-		})
-
-		// Exit if no scaling is required.
-		if decision == nil {
-			groupLogger.Debug().Msg("no scaling required")
-			continue
-		}
-		groupLogger.Info().
-			Object("decision", decision).
-			Msg("scaling decision made and action required")
+	for group, decision := range dec {
 
 		// Iterate over the resource metrics which have broken their thresholds and ensure these
 		// are added to the submission meta.
 		meta := make(map[string]string)
 
 		for name, metric := range decision.metrics {
-			updateAutoscaleMeta(group, name, metric.usage, metric.threshold, meta)
+			updateAutoscaleMeta(name, metric.value, metric.threshold, meta)
 		}
 
 		// Build the job group scaling request.
@@ -93,102 +176,74 @@ func (a *AutoScale) autoscaleJob(jobID string, policies map[string]*policy.Group
 			Direction:          decision.direction,
 			Count:              decision.count,
 			GroupName:          group,
-			GroupScalingPolicy: pol,
-			Time:               t,
+			GroupScalingPolicy: ae.policies[group],
+			Time:               ae.time,
+			Meta:               meta,
 		}
 		scaleReq = append(scaleReq, req)
 
-		groupLogger.Debug().
+		ae.log.Debug().
+			Str("group", group).
 			Object("scaling-req", req).
 			Msg("added group scaling request")
 	}
-
-	// If group scaling requests have been added to the array for the job that is currently being
-	// checked, trigger a scaling event.
-	if len(scaleReq) > 0 {
-		resp, _, err := a.scaler.Trigger(jobID, scaleReq, state.SourceInternalAutoscaler)
-		if err != nil {
-			jobLogger.Error().Err(err).Msg("failed to trigger scaling of job")
-			sendTriggerErrorMetrics(jobID)
-		}
-
-		if resp != nil {
-			jobLogger.Info().
-				Str("id", resp.ID.String()).
-				Str("evaluation-id", resp.EvaluationID).
-				Msg("successfully triggered autoscaling of job")
-			sendTriggerSuccessMetrics(jobID)
-		}
-	}
+	return scaleReq
 }
 
-func (a *AutoScale) getJobAllocations(jobID string, policies map[string]*policy.GroupScalingPolicy) (map[string]*scalableResources, []*nomad.Allocation, error) {
-	out := make(map[string]*scalableResources)
-	var allocList []*nomad.Allocation // nolint:prealloc
+// buildSingleDecision takes the decisions from the Nomad and external providers checks, producing
+// a single decision per job group.
+func (ae *autoscaleEvaluation) buildSingleDecision(nomad, external map[string]*scalingDecision) map[string]*scalingDecision {
+	final := make(map[string]*scalingDecision)
 
-	allocs, _, err := a.nomad.Jobs().Allocations(jobID, false, nil)
-	if err != nil {
-		return out, nil, err
+	for group, nomadDec := range nomad {
+		if extDec, ok := external[group]; ok {
+			final[group] = ae.buildSingleGroupDecision(nomadDec, extDec)
+		}
+		final[group] = nomadDec
 	}
 
-	for i := range allocs {
-
-		// GH-70: jobs can have a mix of groups with scaling policies, and groups without. We need
-		// to safely check the policy.
-		if v, ok := policies[allocs[i].TaskGroup]; !ok {
-			break
-		} else {
-			if !v.Enabled {
-				break
-			}
+	for group, extDec := range external {
+		if _, ok := final[group]; !ok {
+			final[group] = extDec
 		}
-
-		if !(allocs[i].ClientStatus == nomad.AllocClientStatusRunning || allocs[i].ClientStatus == nomad.AllocClientStatusPending) {
-			continue
-		}
-
-		allocInfo, _, err := a.nomad.Allocations().Info(allocs[i].ID, nil)
-		if err != nil {
-			return out, nil, err
-		}
-		allocList = append(allocList, allocInfo)
-
-		updateResourceTracker(allocInfo.TaskGroup, *allocInfo.Resources.CPU, *allocInfo.Resources.MemoryMB, out)
 	}
-	return out, allocList, err
+	return final
 }
 
-func (a *AutoScale) getJobResourceUsage(allocs []*nomad.Allocation) (map[string]*scalableResources, error) {
-	out := make(map[string]*scalableResources)
+// buildSingleGroupDecision takes a scalingDecision from Nomad and the external sources, deciding
+// the final decision for the job group. In situations where out and in actions are requested, out
+// will always win.
+func (ae *autoscaleEvaluation) buildSingleGroupDecision(nomad, external *scalingDecision) *scalingDecision {
 
-	for i := range allocs {
-		stats, err := a.nomad.Allocations().Stats(allocs[i], nil)
-		if err != nil {
-			return out, err
+	// If Nomad wishes to scale in, but the external sources want to scale out, the external source
+	// wins. We return this decision which contains the metric values which failed their threshold
+	// check.
+	if nomad.direction == scale.DirectionIn && external.direction == scale.DirectionOut {
+		return external
+	}
+
+	// If Nomad wishes to scale out, but the external sources want to scale in, the Nomad source
+	// wins. We return this decision which contains the metric values which failed their threshold
+	// check.
+	if nomad.direction == scale.DirectionOut && external.direction == scale.DirectionIn {
+		return nomad
+	}
+
+	// If both Nomad and external sources desire the same action, combine the metrics which failed
+	// their checks so we can provide this detail to the user.
+	if nomad.direction == scale.DirectionIn && external.direction == scale.DirectionIn ||
+		nomad.direction == scale.DirectionOut && external.direction == scale.DirectionOut {
+		for key, metric := range external.metrics {
+			nomad.metrics[key] = metric
 		}
-
-		updateResourceTracker(allocs[i].TaskGroup,
-			int(stats.ResourceUsage.CpuStats.TotalTicks),
-			int(stats.ResourceUsage.MemoryStats.RSS/1024/1024),
-			out)
+		return nomad
 	}
-	return out, nil
-}
-
-// updateResourceTracker is responsible for updating the current resource tracking of a job, making
-// sure nothing is overwritten where values already exists.
-func updateResourceTracker(group string, cpu, mem int, tracker map[string]*scalableResources) {
-	if _, ok := tracker[group]; ok {
-		tracker[group].mem += mem
-		tracker[group].cpu += cpu
-		return
-	}
-	tracker[group] = &scalableResources{cpu: cpu, mem: mem}
+	return nil
 }
 
 // updateAutoscaleMeta populates meta with the metrics used to autoscale a job group.
-func updateAutoscaleMeta(group, metricType string, value, threshold int, meta map[string]string) {
-	key := group + "-" + metricType
-	meta[key+"-value"] = strconv.Itoa(value)
-	meta[key+"-threshold"] = strconv.Itoa(threshold)
+func updateAutoscaleMeta(metricType string, value, threshold float64, meta map[string]string) {
+	key := metricType
+	meta[key+"-value"] = fmt.Sprintf("%.2f", value)
+	meta[key+"-threshold"] = fmt.Sprintf("%.2f", threshold)
 }

@@ -11,4 +11,5 @@ const (
 	metaKeyScaleOutMemoryPercentageThreshold = "sherpa_scale_out_memory_percentage_threshold"
 	metaKeyScaleInCPUPercentageThreshold     = "sherpa_scale_in_cpu_percentage_threshold"
 	metaKeyScaleInMemoryPercentageThreshold  = "sherpa_scale_in_memory_percentage_threshold"
+	metaKeyExternalChecks                    = "sherpa_external_checks"
 )

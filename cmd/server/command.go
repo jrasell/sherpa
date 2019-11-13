@@ -26,6 +26,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 	serverCfg.RegisterTLSConfig(cmd)
 	serverCfg.RegisterTelemetryConfig(cmd)
 	serverCfg.RegisterClusterConfig(cmd)
+	serverCfg.RegisterMetricProviderConfig(cmd)
 	logCfg.RegisterConfig(cmd)
 	rootCmd.AddCommand(cmd)
 
@@ -37,6 +38,7 @@ func runServer(_ *cobra.Command, _ []string) {
 	tlsConfig := serverCfg.GetTLSConfig()
 	telemetryConfig := serverCfg.GetTelemetryConfig()
 	clusterConfig := serverCfg.GetClusterConfig()
+	metricProviderConfig := serverCfg.GetMetricProviderConfig()
 
 	if err := verifyServerConfig(serverConfig); err != nil {
 		fmt.Println(err)
@@ -51,10 +53,11 @@ func runServer(_ *cobra.Command, _ []string) {
 	}
 
 	cfg := &server.Config{
-		Cluster:   &clusterConfig,
-		Server:    &serverConfig,
-		TLS:       &tlsConfig,
-		Telemetry: &telemetryConfig,
+		Cluster:        &clusterConfig,
+		MetricProvider: metricProviderConfig,
+		Server:         &serverConfig,
+		TLS:            &tlsConfig,
+		Telemetry:      &telemetryConfig,
 	}
 	srv := server.New(log.Logger, cfg)
 

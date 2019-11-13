@@ -5,10 +5,11 @@ import (
 )
 
 type Config struct {
-	Cluster   *serverCfg.ClusterConfig
-	Server    *serverCfg.Config
-	TLS       *serverCfg.TLSConfig
-	Telemetry *serverCfg.TelemetryConfig
+	Cluster        *serverCfg.ClusterConfig
+	MetricProvider *serverCfg.MetricProviderConfig
+	Server         *serverCfg.Config
+	TLS            *serverCfg.TLSConfig
+	Telemetry      *serverCfg.TelemetryConfig
 }
 
 const (

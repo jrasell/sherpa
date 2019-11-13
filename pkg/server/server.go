@@ -11,7 +11,8 @@ import (
 	"syscall"
 
 	"github.com/armon/go-metrics"
-	"github.com/hashicorp/nomad/api"
+	consulAPI "github.com/hashicorp/consul/api"
+	nomadAPI "github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale"
 	"github.com/jrasell/sherpa/pkg/client"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
@@ -57,7 +58,10 @@ type HTTPServer struct {
 
 	clusterMember *cluster.Member
 
-	nomad     *api.Client
+	// Store the Nomad and Consul API clients for resuse.
+	nomad  *nomadAPI.Client
+	consul *consulAPI.Client
+
 	autoScale *autoscale.AutoScale
 	telemetry *metrics.InmemSink
 
@@ -118,6 +122,10 @@ func (h *HTTPServer) logServerConfig() {
 
 func (h *HTTPServer) setup() error {
 	if err := h.setupNomadClient(); err != nil {
+		return err
+	}
+
+	if err := h.setupConsulClient(); err != nil {
 		return err
 	}
 
@@ -195,8 +203,8 @@ func (h *HTTPServer) setupStoredBackends() {
 	// Setup the standard backends based on the operators storage type.
 	if h.cfg.Server.ConsulStorageBackend {
 		h.logger.Debug().Msg("setting up Consul storage backend")
-		h.stateBackend = stateConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
-		h.clusterBackend = clusterConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
+		h.stateBackend = stateConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath, h.consul)
+		h.clusterBackend = clusterConsul.NewStateBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath, h.consul)
 	} else {
 		h.logger.Debug().Msg("setting up in-memory storage backend")
 		h.stateBackend = stateMemory.NewStateBackend()
@@ -215,7 +223,7 @@ func (h *HTTPServer) setupPolicyBackend() {
 	}
 
 	if h.cfg.Server.ConsulStorageBackend {
-		h.policyBackend = consul.NewConsulPolicyBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath)
+		h.policyBackend = consul.NewConsulPolicyBackend(h.logger, h.cfg.Server.ConsulStorageBackendPath, h.consul)
 		return
 	}
 	h.policyBackend = policyMemory.NewJobScalingPolicies()
@@ -233,15 +241,32 @@ func (h *HTTPServer) setupNomadClient() error {
 	return nil
 }
 
+func (h *HTTPServer) setupConsulClient() error {
+	h.logger.Debug().Msg("setting up Consul client")
+
+	cc, err := client.NewConsulClient()
+	if err != nil {
+		return err
+	}
+	h.consul = cc
+
+	return nil
+}
+
 func (h *HTTPServer) setupAutoScaling() error {
 	h.logger.Debug().Msg("setting up Sherpa internal auto-scaling engine")
-	autoscaleCfg := &autoscale.Config{
-		StrictChecking:  h.cfg.Server.StrictPolicyChecking,
-		ScalingInterval: h.cfg.Server.InternalAutoScalerEvalPeriod,
-		ScalingThreads:  h.cfg.Server.InternalAutoScalerNumThreads,
+	autoscaleCfg := &autoscale.SetupConfig{
+		StrictChecking:    h.cfg.Server.StrictPolicyChecking,
+		ScalingInterval:   h.cfg.Server.InternalAutoScalerEvalPeriod,
+		ScalingThreads:    h.cfg.Server.InternalAutoScalerNumThreads,
+		MetricProviderCfg: h.cfg.MetricProvider,
+		Logger:            h.logger,
+		PolicyBackend:     h.policyBackend,
+		Scale:             h.scaleBackend,
+		Nomad:             h.nomad,
 	}
 
-	as, err := autoscale.NewAutoScaleServer(h.logger, h.nomad, h.policyBackend, h.scaleBackend, autoscaleCfg)
+	as, err := autoscale.NewAutoScaleServer(autoscaleCfg)
 	if err != nil {
 		return err
 	}
