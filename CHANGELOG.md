@@ -1,6 +1,7 @@
 ## 0.4.0 (Unreleased)
 
 IMPROVEMENTS:
+ * Scaling policies can now detail any number of external metrics and thresholds to check. The internal autoscaler will perform lookups on each iteration of the external source, to check whether scaling is needed. Currently `prometheus` is supported as an external source [[GH-104]](https://github.com/jrasell/sherpa/pull/104)
  * Metrics to measure policy backend request latencies [[GH-93]](https://github.com/jrasell/sherpa/pull/93)
  * Metrics to measure scaling state backend request latencies[[GH-94]](https://github.com/jrasell/sherpa/pull/94)
  * Metrics to measure autoscaler performance and health [[GH-95]](https://github.com/jrasell/sherpa/pull/95)
