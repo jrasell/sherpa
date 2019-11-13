@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/consul/api"
-	"github.com/jrasell/sherpa/pkg/client"
 	"github.com/jrasell/sherpa/pkg/state"
 	"github.com/jrasell/sherpa/pkg/state/cluster"
 	"github.com/pkg/errors"
@@ -40,12 +39,10 @@ type ClusterLock struct {
 	lock   *api.Lock
 }
 
-func NewStateBackend(log zerolog.Logger, path string) cluster.Backend {
-	consul, _ := client.NewConsulClient()
-
+func NewStateBackend(log zerolog.Logger, path string, client *api.Client) cluster.Backend {
 	return &ClusterBackend{
-		client:            consul,
-		kv:                consul.KV(),
+		client:            client,
+		kv:                client.KV(),
 		clusterInfoPath:   path + clusterInfoPath,
 		clusterLockPath:   path + clusterLockPath,
 		clusterLeaderPath: path + clusterLeaderPath,
