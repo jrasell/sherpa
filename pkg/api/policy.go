@@ -20,10 +20,21 @@ type JobGroupPolicy struct {
 	MinCount                          int
 	ScaleOutCount                     int
 	ScaleInCount                      int
-	ScaleOutCPUPercentageThreshold    int
-	ScaleOutMemoryPercentageThreshold int
-	ScaleInCPUPercentageThreshold     int
-	ScaleInMemoryPercentageThreshold  int
+	ScaleOutCPUPercentageThreshold    *int
+	ScaleOutMemoryPercentageThreshold *int
+	ScaleInCPUPercentageThreshold     *int
+	ScaleInMemoryPercentageThreshold  *int
+	ExternalChecks                    map[string]*ExternalCheck
+}
+
+// ExternalCheck represents an individual external check within a group scaling policy.
+type ExternalCheck struct {
+	Enabled            bool
+	Provider           string
+	Query              string
+	ComparisonOperator string
+	ComparisonValue    int
+	Action             string
 }
 
 func (p *Policies) List() (*map[string]map[string]*JobGroupPolicy, error) {

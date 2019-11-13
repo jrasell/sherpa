@@ -3,6 +3,8 @@ package memory
 import (
 	"testing"
 
+	"github.com/jrasell/sherpa/pkg/helper"
+
 	"github.com/jrasell/sherpa/pkg/policy"
 	"github.com/stretchr/testify/assert"
 )
@@ -75,9 +77,9 @@ func generateTestPolicy() *policy.GroupScalingPolicy {
 		MaxCount:                          10,
 		ScaleInCount:                      1,
 		ScaleOutCount:                     2,
-		ScaleOutCPUPercentageThreshold:    80,
-		ScaleInCPUPercentageThreshold:     20,
-		ScaleOutMemoryPercentageThreshold: 80,
-		ScaleInMemoryPercentageThreshold:  20,
+		ScaleOutCPUPercentageThreshold:    helper.Float64ToPointer(80),
+		ScaleInCPUPercentageThreshold:     helper.Float64ToPointer(20),
+		ScaleOutMemoryPercentageThreshold: helper.Float64ToPointer(80),
+		ScaleInMemoryPercentageThreshold:  helper.Float64ToPointer(20),
 	}
 }
