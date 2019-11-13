@@ -8,6 +8,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
  * Scale out/in endpoints should use POST rather than PUT method [[GH-103]](https://github.com/jrasell/sherpa/pull/103)
+ * Reuse the Consul API client rather than create new for each use [[GH-106]](https://github.com/jrasell/sherpa/pull/106)
 
 REFACTOR:
  * Move the system API endpoint into the `server/endpoints/v1` package [[GH-99]](https://github.com/jrasell/sherpa/pull/99)
