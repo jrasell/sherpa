@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/hashicorp/nomad/api v0.0.0-20190508234936-7ba2378a159e
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/liamg/tml v0.2.0
 	github.com/mattn/go-isatty v0.0.7
 	github.com/oklog/run v1.0.0
 	github.com/panjf2000/ants/v2 v2.1.1
