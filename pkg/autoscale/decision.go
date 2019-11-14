@@ -97,6 +97,7 @@ func (ae *autoscaleEvaluation) evaluateExternalMetric(name string, check *policy
 	// Check that the provider is available and properly configured for use.
 	if _, ok := ae.metricProvider[check.Provider]; !ok {
 		ae.log.Warn().
+			Str("metric-query", check.Query).
 			Str("metric-provider", check.Provider.String()).
 			Msg("provider not found configured within autoscaler")
 		return nil
