@@ -7,6 +7,7 @@ IMPROVEMENTS:
  * Metrics to measure autoscaler performance and health [[GH-95]](https://github.com/jrasell/sherpa/pull/95)
  * Add prometheus format option to metrics endpoint [[GH-101]](https://github.com/jrasell/sherpa/pull/101)
  * Scaling events can be listed by the latest per job group [[GH-107]](https://github.com/jrasell/sherpa/pull/107)
+ * Policy list command output sorts alphabetically [[GH-108]](https://github.com/jrasell/sherpa/pull/108)
 
 BUG FIXES:
  * Scale out/in endpoints should use POST rather than PUT method [[GH-103]](https://github.com/jrasell/sherpa/pull/103)
