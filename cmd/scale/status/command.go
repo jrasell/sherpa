@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/jrasell/sherpa/cmd/helper"
-
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
+	"github.com/jrasell/sherpa/pkg/config/scale"
 	"github.com/sean-/sysexits"
 	"github.com/spf13/cobra"
 )
@@ -27,6 +27,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 		},
 	}
 	rootCmd.AddCommand(cmd)
+	scale.RegisterScaleStatusConfig(cmd)
 
 	return nil
 }
@@ -39,6 +40,7 @@ func runStatus(_ *cobra.Command, args []string) {
 
 	clientConfig := clientCfg.GetConfig()
 	mergedConfig := api.DefaultConfig(&clientConfig)
+	latestConfig := scale.GetScaleStatusConfig()
 
 	client, err := api.NewClient(mergedConfig)
 	if err != nil {
@@ -48,21 +50,20 @@ func runStatus(_ *cobra.Command, args []string) {
 
 	switch len(args) {
 	case 0:
-		os.Exit(runList(client))
+		os.Exit(runList(client, latestConfig.Latest))
 	case 1:
 		os.Exit(runInfo(client, args[0]))
 	}
 }
 
-func runList(c *api.Client) int {
-	resp, err := c.Scale().List()
+func runList(c *api.Client, latest bool) int {
+	resp, err := c.Scale().List(latest)
 	if err != nil {
 		fmt.Println("Error getting scaling list:", err)
 		os.Exit(sysexits.Software)
 	}
 
-	var out []string
-	out = append(out, listOutputHeader)
+	out := []string{listOutputHeader}
 
 	for id, jobEvents := range resp {
 		for jg, event := range jobEvents {

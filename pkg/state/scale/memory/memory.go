@@ -74,6 +74,7 @@ func (s *StateBackend) PutScalingEvent(job string, event *state.ScalingEventMess
 	k := job + ":" + event.GroupName
 
 	sEntry := &state.ScalingEvent{
+		ID:      event.ID,
 		EvalID:  event.EvalID,
 		Source:  event.Source,
 		Time:    event.Time,

@@ -21,6 +21,9 @@ type ScalingState struct {
 // ScalingEvent represents a single scaling event state entry that is persisted to the backend
 // store.
 type ScalingEvent struct {
+	// ID is the scaling ID.
+	ID uuid.UUID
+
 	// EvalID is the Nomad evaluation ID which was created as a result of submitting the updated
 	// job to the Nomad API.
 	EvalID string

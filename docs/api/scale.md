@@ -90,12 +90,17 @@ This endpoint can be used to list the recent scaling events.
 | :--------------------------- | :--------------------- |
 | `GET`    | `/v1/scale/status`              | `200 application/binary` |
 
+
+#### Parameters
+
+* `latest` (bool: optional) - Specifies whether Sherpa should only return the latest scaling event per job group.
+
 ### Sample Request
 
 ```
 $ curl \
     --request GET \
-    http://127.0.0.1:8000/v1/scale/status
+    http://127.0.0.1:8000/v1/scale/status?latest=false
 ```
 
 ### Sample Response
@@ -104,6 +109,7 @@ $ curl \
 {
   "036e4bd6-8f7d-4a8c-bf90-790790bbdc2a": {
     "example2:cache": {
+      "ID": "036e4bd6-8f7d-4a8c-bf90-790790bbdc2a",
       "EvalID": "e05a8d0f-87f8-bda8-eb3e-885caaf50c36",
       "Source": "InternalAutoscaler",
       "Time": 1568538833630403000,
@@ -119,6 +125,7 @@ $ curl \
   },
   "3bc8190e-b9fc-4997-bb39-3749eed5affd": {
     "example1:cache": {
+      "ID": "3bc8190e-b9fc-4997-bb39-3749eed5affd",
       "EvalID": "ec38990e-81e2-1c99-fbf2-725e8ca6ad70",
       "Source": "InternalAutoscaler",
       "Time": 1568538893629872000,
@@ -155,6 +162,7 @@ $ curl \
 ```json
 "3bc8190e-b9fc-4997-bb39-3749eed5affd": {
   "example1:cache": {
+    "ID": "3bc8190e-b9fc-4997-bb39-3749eed5affd",
     "EvalID": "ec38990e-81e2-1c99-fbf2-725e8ca6ad70",
     "Source": "InternalAutoscaler",
     "Time": 1568538893629872000,
