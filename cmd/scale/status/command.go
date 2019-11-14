@@ -3,8 +3,10 @@ package status
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/jrasell/sherpa/cmd/helper"
 	"github.com/jrasell/sherpa/pkg/api"
 	clientCfg "github.com/jrasell/sherpa/pkg/config/client"
@@ -63,11 +65,14 @@ func runList(c *api.Client, latest bool) int {
 		os.Exit(sysexits.Software)
 	}
 
+	orderedIDs := orderStatusIDs(resp)
+
 	out := []string{listOutputHeader}
 
-	for id, jobEvents := range resp {
-		for jg, event := range jobEvents {
-			out = append(out, fmt.Sprintf("%v|%s|%s|%v", id, jg, event.Status, helper.UnixNanoToHumanUTC(event.Time)))
+	for i := range orderedIDs {
+		for jg, event := range resp[orderedIDs[i]] {
+			out = append(out, fmt.Sprintf("%v|%s|%s|%v",
+				orderedIDs[i], jg, event.Status, helper.UnixNanoToHumanUTC(event.Time)))
 		}
 	}
 
@@ -75,6 +80,26 @@ func runList(c *api.Client, latest bool) int {
 		fmt.Println(helper.FormatList(out))
 	}
 	return sysexits.OK
+}
+
+func orderStatusIDs(input map[uuid.UUID]map[string]*api.ScalingEvent) []uuid.UUID {
+	inter := make(map[int64]uuid.UUID)
+	timeList := []int64{}
+	resp := []uuid.UUID{}
+
+	for id, jobEvents := range input {
+		for _, event := range jobEvents {
+			inter[event.Time] = id
+			timeList = append(timeList, event.Time)
+			continue
+		}
+	}
+
+	sort.Slice(timeList, func(i, j int) bool { return timeList[i] > timeList[j] })
+	for i := range timeList {
+		resp = append(resp, inter[timeList[i]])
+	}
+	return resp
 }
 
 func runInfo(c *api.Client, id string) int {
