@@ -58,7 +58,7 @@ func runInfo(_ *cobra.Command, _ []string) {
 
 	for i := range metrics.Samples {
 		out = append(out, fmt.Sprintf("%s|%s|%v",
-			metrics.Samples[i].Name, "Counter", metrics.Samples[i].Mean))
+			metrics.Samples[i].Name, "Samples", metrics.Samples[i].Mean))
 	}
 
 	// If there are no metrics to print (happens during initial server startup)
