@@ -1,6 +1,6 @@
 # Server CLI
 
-The server command starts a Sherpa server that responds to API requests. Please see the [configuration documentation](../configuration/_readme.md) for all server configuration options.
+The server command starts a Sherpa server that responds to API requests. Please see the [configuration documentation](../configuration/README.md) for all server configuration options.
 
 ## Examples
 
