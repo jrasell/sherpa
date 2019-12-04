@@ -4,6 +4,11 @@ The policy command groups subcommands for interacting with policies. Users can w
 
 ## Examples
 
+Create an example job group scaling policy:
+```bash
+$ sherpa policy init
+```
+
 List all policies:
 ```bash
 $ sherpa policy list
@@ -42,7 +47,8 @@ Usage:
 
 Available Commands:
   delete      Deletes a scaling policy from Sherpa
+  init        Creates an example job group scaling policy
   list        Lists all scaling policies
-  read        Details the scaling policy
+  read        Details scaling policies associated to a job
   write       Uploads a policy from file
 ```

@@ -19,6 +19,11 @@ Output the latest metric data points for the running server:
 $ sherpa system metrics
 ```
 
+Get information about the backend HA status and leader:
+```bash
+$ sherpa system leader
+```
+
 ## Usage
 ```bash
 Usage:
@@ -28,5 +33,6 @@ Usage:
 Available Commands:
   health      Retrieve health information of a Sherpa server
   info        Retrieve information about a Sherpa server
+  leader      Check the HA status and current leader
   metrics     Retrieve metrics from a Sherpa server
 ```

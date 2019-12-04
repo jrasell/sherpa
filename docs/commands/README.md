@@ -14,7 +14,7 @@ $ sherpa <subcommand> -h
 
 ## CLI Command Structure
 
-There are a number of command and subcommand options available. Construct your Vault CLI command such that the command options precede its and arguments if any:
+There are a number of command and subcommand options available. Construct your Sherpa CLI command such that the command options precede its and arguments if any:
 
 ```bash
 sherpa <command> <subcommand> [options] [args]

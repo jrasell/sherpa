@@ -27,7 +27,7 @@ This endpoint can be used to scale a Nomad job group out, therefore increasing i
 
 ```
 $ curl \
-    --request PUT \
+    --request POST \
     --data @payload.json \
     http://127.0.0.1:8000/v1/scale/out/my-job/my-job-group?count=2
 ```
@@ -68,7 +68,7 @@ This endpoint can be used to scale a Nomad job group in, therefore decreasing it
 
 ```
 $ curl \
-    --request PUT \
+    --request POST \
     --data @payload.json \
     http://127.0.0.1:8000/v1/scale/in/my-job/my-job-group?count=2
 ```
