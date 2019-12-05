@@ -18,7 +18,7 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 * `--policy-engine-api-enabled` (bool: true) - Enable the Sherpa API to manage scaling policies.
 * `--policy-engine-nomad-meta-enabled` (bool: false) - Enable Nomad job meta lookups to manage scaling policies.
 * `--policy-engine-strict-checking-enabled` (bool: true) - When enabled, all scaling activities must pass through policy checks.
-* `--storage-consul-enabled` (bool: false) - Use Consul as a storage backend when using the API policy engine.
+* `--storage-consul-enabled` (bool: false) - Use Consul as the storage backend for state.
 * `--storage-consul-path` (string: "sherpa/") - The Consul KV path that will be used to store policies and state.
 * `--telemetry-prometheus` (bool: false) - Specifies whether Prometheus formatted metrics are available.
 * `--telemetry-statsd-address` (string: "") - Specifies the address of a statsd server to forward metrics to.
