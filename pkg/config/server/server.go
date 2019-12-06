@@ -183,7 +183,7 @@ func RegisterConfig(cmd *cobra.Command) {
 			key          = configKeyStorageBackendConsulEnabled
 			longOpt      = "storage-consul-enabled"
 			defaultValue = false
-			description  = "Use Consul as a storage backend when using the API policy engine"
+			description  = "Use Consul as the storage backend for state"
 		)
 
 		flags.Bool(longOpt, defaultValue, description)
