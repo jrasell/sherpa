@@ -1,4 +1,4 @@
-## 0.4.0 (Unreleased)
+## 0.4.0 (20 December, 2019)
 
 IMPROVEMENTS:
  * Scaling policies can now detail any number of external metrics and thresholds to check. The internal autoscaler will perform lookups on each iteration of the external source, to check whether scaling is needed. Currently `prometheus` is supported as an external source [[GH-104]](https://github.com/jrasell/sherpa/pull/104)
