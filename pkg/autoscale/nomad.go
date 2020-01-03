@@ -86,10 +86,10 @@ func (ae *autoscaleEvaluation) getJobAllocations() (map[string]*nomadResources, 
 		// GH-70: jobs can have a mix of groups with scaling policies, and groups without. We need
 		// to safely check the policy.
 		if v, ok := ae.policies[allocs[i].TaskGroup]; !ok {
-			break
+			continue
 		} else {
 			if !v.Enabled {
-				break
+				continue
 			}
 		}
 
