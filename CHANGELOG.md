@@ -1,3 +1,8 @@
+## 0.4.1 (Unreleased)
+
+BUG FIXES:
+ * Fix incorrect searching of allocs causing missed allocations when performing autoscaling evaluations in jobs with a mix of scalable, and non-scable groups [[GH-121]](https://github.com/jrasell/sherpa/pull/121)
+
 ## 0.4.0 (20 December, 2019)
 
 IMPROVEMENTS:
