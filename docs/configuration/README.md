@@ -11,6 +11,7 @@ The Sherpa server can be configured by supplying either CLI flags or using envir
 * `--bind-port` (uint16: 8000) - The HTTP server port to bind to.
 * `--cluster-advertise-addr` (string: "http://127.0.0.1:8000") - The Sherpa server advertise address used for NAT traversal on HTTP redirects.
 * `--cluster-name` (string: "") - Specifies the identifier for the Sherpa cluster.
+* `--debug-enabled` (bool: false) - Specifies if the debugging HTTP endpoints should be enabled.
 * `--log-format` (string: "auto") - Specify the log format ("auto", "zerolog" or "human").
 * `--log-level` (string: "info") - Change the level used for logging.
 * `--log-use-color` (bool: true) - Use ANSI colors in logging output.
