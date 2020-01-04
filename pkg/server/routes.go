@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"net/http/pprof"
 
 	policyV1 "github.com/jrasell/sherpa/pkg/policy/v1"
 	scaleV1 "github.com/jrasell/sherpa/pkg/scale/v1"
@@ -32,6 +33,12 @@ func (h *HTTPServer) setupRoutes() *router.RouteTable {
 	// Setup the base policy routes.
 	policyRoutes := h.setupPolicyRoutes()
 	r = append(r, policyRoutes)
+
+	// Setup the server debug routes if enabled.
+	if h.cfg.Debug {
+		debugRoutes := h.setupDebugRoutes()
+		r = append(r, debugRoutes)
+	}
 
 	// Setup the UI routes if it is enabled.
 	if h.cfg.Server.UI {
@@ -210,6 +217,43 @@ func (h *HTTPServer) setupAPIPolicyRoutes() []router.Route {
 			Method:  http.MethodDelete,
 			Pattern: routeDeleteJobScalingPolicyPattern,
 			Handler: leaderProtectedHandler(h.clusterMember, h.routes.Policy.DeleteJobPolicy),
+		},
+	}
+}
+
+func (h *HTTPServer) setupDebugRoutes() []router.Route {
+	h.logger.Debug().Msg("setting up server Debug routes")
+
+	return router.Routes{
+		router.Route{
+			Name:        routeGetDebugPPROFName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetDebugPPROFPattern,
+			HandlerFunc: pprof.Index,
+		},
+		router.Route{
+			Name:        routeGetDebugPPROFCMDLineName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetDebugPPROFCMDLinePattern,
+			HandlerFunc: pprof.Cmdline,
+		},
+		router.Route{
+			Name:        routeGetDebugPPROFProfileName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetDebugPPROFProfilePattern,
+			HandlerFunc: pprof.Profile,
+		},
+		router.Route{
+			Name:        routeGetDebugPPROFSymbolName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetDebugPPROFSymbolPattern,
+			HandlerFunc: pprof.Symbol,
+		},
+		router.Route{
+			Name:        routeGetDebugPPROFTraceName,
+			Method:      http.MethodGet,
+			Pattern:     routeGetDebugPPROFTracePattern,
+			HandlerFunc: pprof.Trace,
 		},
 	}
 }

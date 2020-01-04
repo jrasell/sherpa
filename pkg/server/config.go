@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	Debug          bool
 	Cluster        *serverCfg.ClusterConfig
 	MetricProvider *serverCfg.MetricProviderConfig
 	Server         *serverCfg.Config
@@ -58,4 +59,18 @@ const (
 	routeSystemHealthPattern    = "/v1/system/health"
 	routeSystemInfoName         = "GetSystemInfo"
 	routeSystemInfoPattern      = "/v1/system/info"
+)
+
+// Debug server routes.
+const (
+	routeGetDebugPPROFName           = "GetDebugPPROF"
+	routeGetDebugPPROFPattern        = "/debug/pprof/"
+	routeGetDebugPPROFCMDLineName    = "GetDebugPPROFCMDLine"
+	routeGetDebugPPROFCMDLinePattern = "/debug/pprof/cmdline"
+	routeGetDebugPPROFProfileName    = "GetDebugPPROFProfile"
+	routeGetDebugPPROFProfilePattern = "/debug/pprof/profile"
+	routeGetDebugPPROFSymbolName     = "GetDebugPPROFSymbol"
+	routeGetDebugPPROFSymbolPattern  = "/debug/pprof/symbol"
+	routeGetDebugPPROFTraceName      = "GetDebugPPROFTrace"
+	routeGetDebugPPROFTracePattern   = "/debug/pprof/trace"
 )
