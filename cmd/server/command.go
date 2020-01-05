@@ -27,6 +27,7 @@ func RegisterCommand(rootCmd *cobra.Command) error {
 	serverCfg.RegisterTelemetryConfig(cmd)
 	serverCfg.RegisterClusterConfig(cmd)
 	serverCfg.RegisterMetricProviderConfig(cmd)
+	serverCfg.RegisterDebugConfig(cmd)
 	logCfg.RegisterConfig(cmd)
 	rootCmd.AddCommand(cmd)
 
@@ -53,6 +54,7 @@ func runServer(_ *cobra.Command, _ []string) {
 	}
 
 	cfg := &server.Config{
+		Debug:          serverCfg.GetDebugEnabled(),
 		Cluster:        &clusterConfig,
 		MetricProvider: metricProviderConfig,
 		Server:         &serverConfig,
