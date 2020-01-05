@@ -1,3 +1,8 @@
+## 0.5.0 (Unreleased)
+
+IMPROVEMENTS:
+ * Add pprof Debug API routes for Sherpa server profiling [[GH-124]](https://github.com/jrasell/sherpa/pull/124)
+
 ## 0.4.1 (3 January, 2020)
 
 BUG FIXES:
