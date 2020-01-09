@@ -85,7 +85,7 @@ func (ae *autoscaleEvaluation) evaluateJob() {
 		// If the group has external checks, perform these and ensure the decision if not nil,
 		// before adding this to the decision tree.
 		if p.ExternalChecks != nil {
-			if extDec := ae.calculateExternalScalingDecision(ae.jobID, p); extDec != nil {
+			if extDec := ae.calculateExternalScalingDecision(group, p); extDec != nil {
 				externalDecision[group] = extDec
 			}
 		}
