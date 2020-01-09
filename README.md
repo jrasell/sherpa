@@ -29,4 +29,4 @@ Contributions to Sherpa are very welcome! Please reach out if you have any quest
 
 Thanks to everyone who has contributed to this project.
 
-[@jvineet](https://github.com/jvineet) [@josegonzalez](https://github.com/josegonzalez) [@pmcatominey](https://github.com/pmcatominey) [@numiralofe](https://github.com/numiralofe) [@commarla](https://github.com/commarla)
+[@jvineet](https://github.com/jvineet) [@josegonzalez](https://github.com/josegonzalez) [@pmcatominey](https://github.com/pmcatominey) [@numiralofe](https://github.com/numiralofe) [@commarla](https://github.com/commarla) [@hobochili](https://github.com/hobochili)
