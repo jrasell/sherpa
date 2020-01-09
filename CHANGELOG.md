@@ -3,6 +3,9 @@
 IMPROVEMENTS:
  * Add pprof Debug API routes for Sherpa server profiling [[GH-124]](https://github.com/jrasell/sherpa/pull/124)
 
+BUG FIXES:
+ * Fix panic when performing autoscaling evaluation using external metrics [[GH-128]](https://github.com/jrasell/sherpa/pull/128)
+
 ## 0.4.1 (3 January, 2020)
 
 BUG FIXES:
