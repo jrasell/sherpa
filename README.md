@@ -11,7 +11,7 @@ Sherpa is a highly available, fast, and flexible horizontal job scaling for [Has
 
 ## Download & Install
 
-* The Sherpa binary can be downloaded from the [GitHub releases page](https://github.com/jrasell/sherpa/releases) using `curl -L https://github.com/jrasell/sherpa/releases/download/v0.4.1/sherpa_0.4.1_linux_amd64 -o sherpa`
+* The Sherpa binary can be downloaded from the [GitHub releases page](https://github.com/jrasell/sherpa/releases) using `curl -L https://github.com/jrasell/sherpa/releases/download/v0.4.2/sherpa_0.4.2_linux_amd64 -o sherpa`
 
 * A docker image can be found on [Docker Hub](https://hub.docker.com/r/jrasell/sherpa/), the latest version can be downloaded using `docker pull jrasell/sherpa`.
 
