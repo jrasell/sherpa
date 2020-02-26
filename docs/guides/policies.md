@@ -92,6 +92,35 @@ An example job group policy which configures Sherpa to perform two external Prom
 }
 ```
 
+An example job group policy which configures Sherpa to perform two external InfluxDB checks and no Nomad resource checks. The query below is gathering the mean average over the last 10 minutes, and is querying from the telegraf database using the default retention strategy. Additional details on querying InfluxDB can be found [here](https://docs.influxdata.com/influxdb/v1.7/query_language/data_exploration/#the-basic-select-statement).
+```json
+{
+  "Enabled": true,
+  "MaxCount": 16,
+  "MinCount": 1,
+  "ScaleOutCount": 1,
+  "ScaleInCount": 1,
+  "ExternalChecks": {
+    "influxdb_cpu_in": {
+      "Enabled": true,
+      "Provider": "influxdb",
+      "Query": "SELECT mean(gauge) as cpu FROM telegraf..nomad_client_allocs_cpu_total_ticks WHERE job = 'cache' and time >= now() -10m",
+      "ComparisonOperator": "less-than",
+      "ComparisonValue": 30,
+      "Action": "scale-in"
+    },
+    "influxdb_cpu_out": {
+      "Enabled": true,
+      "Provider": "influxdb",
+      "Query": "SELECT mean(gauge) as cpu FROM telegraf..nomad_client_allocs_cpu_total_ticks WHERE job = 'cache' and time >= now() -10m",
+      "ComparisonOperator": "greater-than",
+      "ComparisonValue": 80,
+      "Action": "scale-out"
+    }
+  }
+}⏎
+```
+
 A Nomad meta stanza example configuring both Nomad and external checks.
 ```
 "sherpa_enabled"                               = "true"
