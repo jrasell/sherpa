@@ -7,6 +7,7 @@ import (
 
 	nomad "github.com/hashicorp/nomad/api"
 	"github.com/jrasell/sherpa/pkg/autoscale/metrics"
+	"github.com/jrasell/sherpa/pkg/autoscale/metrics/influxdb"
 	"github.com/jrasell/sherpa/pkg/autoscale/metrics/prometheus"
 	"github.com/jrasell/sherpa/pkg/policy"
 	policyBackend "github.com/jrasell/sherpa/pkg/policy/backend"
@@ -83,6 +84,21 @@ func (a *AutoScale) setupMetricProviders() {
 			a.logger.Error().Err(err).Msg("failed to setup Prometheus metric provider client")
 		} else {
 			a.metricProvider[policy.ProviderPrometheus] = promClient
+		}
+	}
+	// If there is available InfluxDB config, setup the provider.
+	if a.cfg.MetricProviderCfg.InfluxDB != nil {
+		idbClient, err := influxdb.NewClient(
+			a.cfg.MetricProviderCfg.InfluxDB.Addr,
+			a.cfg.MetricProviderCfg.InfluxDB.Username,
+			a.cfg.MetricProviderCfg.InfluxDB.Password,
+			a.cfg.MetricProviderCfg.InfluxDB.Insecure,
+			a.logger,
+		)
+		if err != nil {
+			a.logger.Error().Err(err).Msg("failed to setup InfluxDB metric provider client")
+		} else {
+			a.metricProvider[policy.ProviderInfluxDB] = idbClient
 		}
 	}
 }
