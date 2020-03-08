@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sendMetrics "github.com/armon/go-metrics"
-	"github.com/influxdata/influxdb/client/v2"
+	client "github.com/influxdata/influxdb1-client/v2"
 	"github.com/jrasell/sherpa/pkg/autoscale/metrics"
 	"github.com/jrasell/sherpa/pkg/helper"
 	"github.com/jrasell/sherpa/pkg/policy"
