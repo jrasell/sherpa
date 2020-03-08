@@ -161,6 +161,8 @@ func (mp MetricsProvider) Validate() error {
 	switch mp {
 	case ProviderPrometheus:
 		return nil
+	case ProviderInfluxDB:
+		return nil
 	default:
 		return errors.Errorf("Provider %s is not a valid option", mp.String())
 	}
@@ -169,6 +171,8 @@ func (mp MetricsProvider) Validate() error {
 const (
 	// ProviderPrometheus is the Prometheus metrics backend.
 	ProviderPrometheus MetricsProvider = "prometheus"
+	// ProviderInfluxDB is the InfluxDB metrics backend.
+	ProviderInfluxDB MetricsProvider = "influxdb"
 )
 
 // ComparisonOperator is the operator used when evaluating a metric value against a threshold.

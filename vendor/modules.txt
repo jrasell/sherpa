@@ -43,6 +43,10 @@ github.com/hashicorp/nomad/api/contexts
 github.com/hashicorp/serf/coordinate
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
+# github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
+github.com/influxdata/influxdb1-client/models
+github.com/influxdata/influxdb1-client/pkg/escape
+github.com/influxdata/influxdb1-client/v2
 # github.com/liamg/tml v0.2.0
 github.com/liamg/tml
 # github.com/magiconair/properties v1.8.0
